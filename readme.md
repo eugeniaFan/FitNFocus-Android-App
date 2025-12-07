@@ -1,7 +1,7 @@
 Fit N Focus - Tracker
 =====================
 Selected Categories:
-- Data Storage (SQL / Key-Value)
+- Data Storage
 - Location & Sensors (Motion, Steps, Activity)
 
 Project Description:

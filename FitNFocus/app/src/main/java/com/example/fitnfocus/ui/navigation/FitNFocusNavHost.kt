@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import com.example.fitnfocus.ui.activity.ActivityScreen
 import com.example.fitnfocus.ui.history.HistoryScreen
 import com.example.fitnfocus.ui.home.HomeScreen
-import com.example.fitnfocus.ui.study.StudyScreen
+import com.example.fitnfocus.ui.study.StudyRoute
 
 @Composable
 fun FitNFocusNavHost(
@@ -23,11 +23,7 @@ fun FitNFocusNavHost(
 
         // HOME SCREEN
         composable(NavRoutes.Home.route) {
-            HomeScreen(
-                onNavigateToActivity = { navController.navigate(NavRoutes.Activity.route) },
-                onNavigateToStudy = { navController.navigate(NavRoutes.Study.route) },
-                onNavigateToHistory = { navController.navigate(NavRoutes.History.route) }
-            )
+            HomeScreen()
         }
 
         // ACTIVITY TRACKING SCREEN
@@ -37,10 +33,7 @@ fun FitNFocusNavHost(
 
         // STUDY SCREEN
         composable(NavRoutes.Study.route) {
-            StudyScreen(
-                ///viewModel = viewModel(factory = AppViewModelProvider.Factory),
-                onBack = { navController.popBackStack() }
-            )
+            StudyRoute(onBack = { navController.popBackStack() })
         }
     }
 }

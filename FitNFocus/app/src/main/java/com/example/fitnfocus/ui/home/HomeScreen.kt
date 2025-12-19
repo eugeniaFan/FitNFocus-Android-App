@@ -1,5 +1,6 @@
 package com.example.fitnfocus.ui.home
 
+import android.R.attr.icon
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.viewmodel.HomeViewModel
@@ -39,11 +43,15 @@ import com.example.fitnfocus.viewmodel.HomeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToActivity: () -> Unit,
-    onNavigateToStudy: () -> Unit,
-    onNavigateToHistory: () -> Unit,
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
+    val steps by viewModel.todaySteps.collectAsState()
+    val focusMinutes by viewModel.todayFocusMinutes.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTodayDashboard()
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -51,50 +59,69 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             // ----- DASHBOARD HEADER -----
             Text(
-                text = "Welcome back!",
-                style = MaterialTheme.typography.headlineSmall
-            )
-            Text(
                 text = "Track your progress and stay focused.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Text("Today", style = MaterialTheme.typography.headlineSmall)
+
+            ElevatedCard(Modifier.fillMaxWidth()){
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Text("Activity")
+                    Text("$steps steps")
+                }
+            }
+            ElevatedCard(Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Focus")
+                    Text("$focusMinutes minutes")
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
+
+
+
             // ----- DASHBOARD BUTTONS -----
-            DashboardButton(
-                title = "Track Activity",
-                icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                description = "Record daily movement",
-                onClick = onNavigateToActivity
-            )
-
-            DashboardButton(
-                title = "Study Session",
-                icon = Icons.Default.School,
-                description = "Start a focused study timer",
-                onClick = onNavigateToStudy
-            )
-
-            DashboardButton(
-                title = "History",
-                icon = Icons.Default.History,
-                description = "View past progress",
-                onClick = onNavigateToHistory
-            )
+//            DashboardButton(
+//                title = "Track Activity",
+//                icon = Icons.AutoMirrored.Filled.DirectionsRun,
+//                description = "Record daily movement",
+//                onClick = onNavigateToActivity
+//            )
+//
+//            DashboardButton(
+//                title = "Study Session",
+//                icon = Icons.Default.School,
+//                description = "Start a focused study timer",
+//                onClick = onNavigateToStudy
+//            )
+//
+//            DashboardButton(
+//                title = "History",
+//                icon = Icons.Default.History,
+//                description = "View past progress",
+//                onClick = onNavigateToHistory
+//            )
         }
     }
 }

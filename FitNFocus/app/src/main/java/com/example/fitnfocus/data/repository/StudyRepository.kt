@@ -13,11 +13,18 @@ class StudyRepository(
     suspend fun getStudyById(id: Int): StudySession? {
         return studyDao.getStudySessionsById(id)?.toDomain()
     }
+    suspend fun getStudySessionsByDate(date: String): List<StudySession> {
+        return studyDao.getStudySessionsByDate(date).map { it.toDomain() }
+    }
     fun getAllStudySessions(): Flow<List<StudySession>> {
         return studyDao.getAllStudySessions().map { list ->
             list.map { it.toDomain() }
         }
     }
+    suspend fun getTotalMinutesByDate(date: String): Int {
+        return studyDao.getTotalMinutesByDate(date)
+    }
+
     suspend fun insertStudySession(session: StudySession) {
         studyDao.insertStudySession(
             session.toEntity()
@@ -34,7 +41,7 @@ class StudyRepository(
 // Diese Funktion wandelt das Domain Modell in das Room Entity um
 private fun StudySession.toEntity(): StudySessionEntity {
     return StudySessionEntity(
-        id = 0,
+        id = id,
         subject = subject,
         durationMinutes = durationMinutes,
         date = date

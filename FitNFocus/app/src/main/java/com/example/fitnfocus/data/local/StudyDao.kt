@@ -19,6 +19,9 @@ interface StudyDao {
     @Query("SELECT * FROM study_session WHERE date = :date")
     suspend fun getStudySessionsByDate(date: String): List<StudySessionEntity>
 
+    @Query("SELECT COALESCE(SUM(durationMinutes), 0) FROM study_session WHERE date = :date")
+    suspend fun getTotalMinutesByDate(date: String): Int
+
     @Query("SELECT * FROM study_session WHERE subject = :subject")
     suspend fun getStudySessionsBySubject(subject: String): List<StudySessionEntity>
 

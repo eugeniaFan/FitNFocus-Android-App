@@ -7,6 +7,8 @@ import com.example.fitnfocus.domain.DailyActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+
 
 class ActivityViewModel(
     private val repository: ActivityRepository
@@ -19,6 +21,25 @@ class ActivityViewModel(
         viewModelScope.launch {
             _activity.value = repository.getActivityByDate(date)
         }
+    }
+
+
+    fun addSteps(stepsToAdd: Int) {
+        val today = LocalDate.now().toString()
+        viewModelScope.launch {
+            val current = repository.getActivityByDate(today)
+                ?: DailyActivity(
+                    date = today,
+                    steps = 0,
+                    highMovementMinutes = 0
+                )
+            val updated = current.copy(steps = current.steps + stepsToAdd)
+            repository.insertActivity(updated)
+            _activity.value = updated
+
+        }
+
+
     }
 
     fun saveActivity(activity: DailyActivity) {

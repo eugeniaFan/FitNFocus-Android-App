@@ -6,11 +6,22 @@ import androidx.room.RoomDatabase
 import android.content.Context
 
 
-@Database(entities = [DailyActivityEntity::class, StudySessionEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        DailyActivityEntity::class,
+        StudySessionEntity::class,
+        LearningGoalEntity::class,
+        TopicProgressEntity::class
+    ],
+    version = 6,  // Erhöht wegen elapsedSeconds Feld in StudySessionEntity
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun activityDao(): ActivityDao
-    abstract fun studyDao(): StudyDao
+    abstract fun sessionDao(): SessionDao
+    abstract fun learningGoalDao(): LearningGoalDao
+    abstract fun topicProgressDao(): TopicProgressDao
 
     companion object {
         @Volatile
@@ -22,7 +33,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "fitnfocus_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration(dropAllTables = true) // Für Entwicklungsphase - löscht DB bei Schema-Änderung
+                    .build()
                 INSTANCE = instance
                 instance
             }

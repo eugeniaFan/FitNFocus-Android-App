@@ -6,8 +6,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.di.FitNFocusApplication
 import com.example.fitnfocus.viewmodel.StudyUiEvent
 import com.example.fitnfocus.viewmodel.StudyViewModel
@@ -16,7 +14,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun StudyRoute(
     onBack: () -> Unit,
-    viewModel: StudyViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: StudyViewModel,  // Shared ViewModel von FitNFocusApp
+    onSessionStopped: () -> Unit = {},  // Stop/Cancel → Dashboard
+    onSessionCompleted: () -> Unit = {} // Completed → Focus-Bereich
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as FitNFocusApplication
@@ -47,6 +47,8 @@ fun StudyRoute(
     StudyScreen(
         onBack = onBack,
         viewModel = viewModel,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
+        onSessionStopped = onSessionStopped,
+        onSessionCompleted = onSessionCompleted
     )
 }

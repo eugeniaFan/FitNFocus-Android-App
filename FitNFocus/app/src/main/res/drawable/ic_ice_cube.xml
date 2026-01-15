@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Hintergrund/Body -->
+    <path
+        android:pathData="M40,55 L105,25 L165,55 L165,140 L105,175 L40,140 Z"
+        android:fillColor="#A7E8FF"
+        android:fillAlpha="0.85"/>
+
+    <!-- rechte Fläche (etwas dunkler) -->
+    <path
+        android:pathData="M105,25 L165,55 L165,140 L105,175 Z"
+        android:fillColor="#6ED3F4"
+        android:fillAlpha="0.65"/>
+
+    <!-- linke Fläche (heller) -->
+    <path
+        android:pathData="M40,55 L105,25 L105,175 L40,140 Z"
+        android:fillColor="#CFF4FF"
+        android:fillAlpha="0.75"/>
+
+    <!-- Glanzstreifen -->
+    <path
+        android:pathData="M60,72 L88,56 L88,118 L60,135 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.35"/>
+
+    <!-- kleiner Glanz oben -->
+    <path
+        android:pathData="M92,48 L110,40 L130,52 L112,60 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.25"/>
+</vector>
+

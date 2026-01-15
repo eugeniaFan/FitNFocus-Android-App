@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="180dp"
+    android:viewportWidth="180"
+    android:viewportHeight="180">
+
+    <!-- Coin -->
+    <path
+        android:pathData="M90,18 A72,72 0 1,1 89.9,18 Z"
+        android:fillColor="#FFD66B"/>
+
+    <!-- Coin Schatten -->
+    <path
+        android:pathData="M90,24 A66,66 0 1,1 89.9,24 Z"
+        android:fillColor="#F2B94B"
+        android:fillAlpha="0.75"/>
+
+    <!-- Stern -->
+    <path
+        android:pathData="M90,50 L99,76 L126,76 L104,92 L112,118 L90,103 L68,118 L76,92 L54,76 L81,76 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.95"/>
+</vector>
+

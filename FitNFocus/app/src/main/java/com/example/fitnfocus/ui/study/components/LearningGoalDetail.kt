@@ -1,0 +1,369 @@
+package com.example.fitnfocus.ui.study.components
+
+import android.annotation.SuppressLint
+import android.os.Build
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import com.example.fitnfocus.domain.LearningGoal
+import com.example.fitnfocus.ui.theme.FitNFocusDarkColorScheme
+import com.example.fitnfocus.viewmodel.TopicStatus
+import java.time.format.DateTimeFormatter
+
+
+/**
+ * Detailansicht eines einzelnen Lernziels mit allen Themen.
+ */
+@SuppressLint("NewApi")
+@Composable
+fun LearningGoalDetail(
+    modifier: Modifier = Modifier,
+    goal: LearningGoal,
+    topicProgress: Map<String, Boolean>,
+    topicStatusMap: Map<String, TopicStatus> = emptyMap(),
+    onBackClick: () -> Unit,
+    onEditClick: (LearningGoal) -> Unit,
+    onTopicClick: (String) -> Unit,
+    onTopicToggle: (Int, String, Boolean) -> Unit
+) {
+    val completedCount = goal.topics.count { topicProgress[it] == true }
+    val progress = if (goal.topics.isNotEmpty()) {
+        completedCount.toFloat() / goal.topics.size
+    } else 0f
+
+    Column(
+        modifier = modifier.fillMaxSize(),
+    ) {
+        // Header mit Zurück-Button
+        Spacer(modifier = Modifier.height(28.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück"
+                )
+            }
+
+            Text(
+                text = goal.moduleName,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.Center
+            )
+
+            // Edit Action
+            IconButton(onClick = { onEditClick(goal) }) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Lernziel bearbeiten"
+                )
+            }
+        }
+
+        // Prüfungsdatum anzeigen (falls vorhanden)
+        goal.examDate?.let { date ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Event,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                val formattedDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                } else {
+                    date.toString()
+                }
+                Text(
+                    text = "Prüfung am $formattedDate",
+                    style = MaterialTheme.typography.bodyMedium,
+                    //color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        // Fortschritts-Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = FitNFocusColors.PurplePrimary
+            )
+
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Fortschritt",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = FitNFocusColors.SurfaceVariant.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "${(progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "$completedCount / ${goal.topics.size}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "Themen erledigt",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = FitNFocusColors.SurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(99.dp)),
+                    trackColor = Color.White.copy(alpha = 0.35f),
+                    strokeCap = StrokeCap.Round,
+                    color = FitNFocusColors.OrangeAccent
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Themen-Liste
+        Text(
+            text = "Themen",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (goal.topics.isEmpty()) {
+            Text(
+                text = "Noch keine Themen hinzugefügt.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                itemsIndexed(goal.topics) { index, topic ->
+                    val isCompleted = topicProgress[topic] == true
+                    val topicStatus = topicStatusMap[topic] ?: TopicStatus.NOT_STARTED
+
+                    TopicTimelineItem(
+                        topic = topic,
+                        isCompleted = isCompleted,
+                        topicStatus = topicStatus,
+                        isFirst = index == 0,
+                        isLast = index == goal.topics.lastIndex,
+                        onToggle = { onTopicToggle(goal.id, topic, !isCompleted) },
+                        onClick = { onTopicClick(topic) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Einzelnes Thema in der Timeline mit Checkbox.
+ */
+@Composable
+private fun TopicTimelineItem(
+    topic: String,
+    isCompleted: Boolean,
+    topicStatus: TopicStatus,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onToggle: () -> Unit,
+    onClick: () -> Unit,
+) {
+    // Status-Text basierend auf TopicStatus
+    val statusText = when (topicStatus) {
+        TopicStatus.COMPLETED -> "Abgeschlossen"
+        TopicStatus.IN_PROGRESS -> "In Bearbeitung"
+        TopicStatus.NOT_STARTED -> "Nicht gestartet"
+    }
+
+    // Status-Farbe
+    val statusColor = when (topicStatus) {
+        TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
+        TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
+        TopicStatus.NOT_STARTED -> FitNFocusColors.TextSecondary
+    }
+// Linie (Connector) passend zum Status
+    val connectorColor = when (topicStatus) {
+        TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
+        TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
+        TopicStatus.NOT_STARTED -> FitNFocusColors.OutlineVariant
+    }
+
+    // Card-Background passend zum Status (ohne Alpha-Washout)
+    val cardColor = when (topicStatus) {
+        TopicStatus.COMPLETED -> FitNFocusColors.SurfaceVariant
+        TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeSoft
+        TopicStatus.NOT_STARTED -> Color.White
+    }
+
+    // Icon-Tint im Kreis (Kontrast)
+    val circleIconTint = when (topicStatus) {
+        TopicStatus.COMPLETED, TopicStatus.IN_PROGRESS -> Color.White
+        TopicStatus.NOT_STARTED -> FitNFocusColors.TextSecondary
+    }
+
+    // Topic-Textfarbe
+    val topicTextColor = if (isCompleted) FitNFocusColors.TextSecondary else FitNFocusColors.TextPrimary
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp)
+    ) {
+        // Timeline-Spalte
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(40.dp)
+        ) {
+            // Obere Linie
+            if (!isFirst) {
+                Surface(
+                    color = connectorColor,
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(20.dp)
+                ) {}
+            } else {
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Checkbox-Kreis
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when (topicStatus) {
+                            TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
+                            TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
+                            TopicStatus.NOT_STARTED -> FitNFocusColors.SurfaceVariant
+                        }
+                    )
+                    .clickable(onClick = onToggle),
+                contentAlignment = Alignment.Center
+            ) {
+                when (topicStatus) {
+                    TopicStatus.COMPLETED -> Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Erledigt",
+                        modifier = Modifier.size(16.dp),
+                        tint = circleIconTint
+                    )
+
+                    TopicStatus.IN_PROGRESS -> Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = "In Bearbeitung",
+                        modifier = Modifier.size(14.dp),
+                        tint = circleIconTint
+                    )
+
+                    TopicStatus.NOT_STARTED -> {
+                        /* Leerer Kreis */
+                    }
+                }
+            }
+
+            // Untere Linie
+            if (!isLast) {
+                Surface(
+                    color = connectorColor,
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(40.dp)
+                ) {}
+            }
+        }
+
+        // Content
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = cardColor),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = topic,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (isCompleted) FontWeight.Normal else FontWeight.Medium,
+                        textDecoration = if (isCompleted) TextDecoration.LineThrough else null,
+                        color = topicTextColor
+                    )
+
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = statusColor
+                    )
+                }
+            }
+        }
+    }
+}

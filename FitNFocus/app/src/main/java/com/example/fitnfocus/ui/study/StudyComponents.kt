@@ -38,7 +38,7 @@ fun SessionCard(
             Icon(Icons.Default.Edit, contentDescription = null)
             Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(session.subject, style = MaterialTheme.typography.titleMedium)
+                Text(session.topic, style = MaterialTheme.typography.titleMedium)
                 Text(
                     "${session.durationMinutes} min",
                     style = MaterialTheme.typography.bodyMedium,

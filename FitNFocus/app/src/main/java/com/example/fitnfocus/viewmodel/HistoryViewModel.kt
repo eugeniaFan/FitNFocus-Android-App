@@ -1,18 +1,21 @@
 package com.example.fitnfocus.viewmodel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnfocus.data.repository.ActivityRepository
-import com.example.fitnfocus.data.repository.StudyRepository
+import com.example.fitnfocus.data.repository.SessionRepository
 import com.example.fitnfocus.domain.DailyActivity
 import com.example.fitnfocus.domain.StudySession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class HistoryViewModel (
+@RequiresApi(Build.VERSION_CODES.O)
+class HistoryViewModel(
     private val activityRepository: ActivityRepository,
-    private val studyRepository: StudyRepository
+    private val sessionRepository: SessionRepository
 ) : ViewModel() {
 
     private val _studyHistory = MutableStateFlow<List<StudySession>>(emptyList())
@@ -22,14 +25,14 @@ class HistoryViewModel (
     val activityHistory = _activityHistory.asStateFlow()
 
     init {
-        loadStudyHistory()
+
 //        loadActivityHistory()
     }
 
-
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun loadStudyHistory() {
         viewModelScope.launch {
-            studyRepository.getAllStudySessions().collect {
+            sessionRepository.getAllSessions().collect {
                 _studyHistory.value = it
             }
         }

@@ -14,7 +14,7 @@ import com.example.fitnfocus.ui.focus.FocusRoute
 import com.example.fitnfocus.ui.home.HomeScreen
 import com.example.fitnfocus.ui.onboarding.OnboardingRoute
 import com.example.fitnfocus.ui.profile.ProfileScreen
-import com.example.fitnfocus.ui.study.StudyRoute
+import com.example.fitnfocus.ui.goals.study.StudyRoute
 import com.example.fitnfocus.viewmodel.StudyViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)

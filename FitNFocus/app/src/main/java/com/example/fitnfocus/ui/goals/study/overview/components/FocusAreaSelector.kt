@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.components
+package com.example.fitnfocus.ui.goals.study.overview.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,25 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.FocusArea
 
-object FitNFocusColors {
-    val PurplePrimary = Color(0xFF6750A4)      // RGB(103,80,164)
-    val PurpleDeep = Color(0xFF4F378B)         // RGB(79,55,139)
-    val PurpleTintBg = Color(0xFFF5F3FA)       // RGB(245,243,250)
-    val PurpleContainer = Color(0xFFE9E0FC)    // RGB(233,224,252)
-    val BorderSoft = Color(0xFFE6E1F0)        // weicher lila-grauer Border
-
-
-    val OrangeDeep = Color(0xFF9C4800)        // dunkleres Orange für Text/Icon auf OrangeSoft
-    val OrangeAccent = Color(0xFFFF9933)       // RGB(255,153,51)
-    val OrangeSoft = Color(0xFFFFE8D0)         // RGB(255,232,208)
-
-    val Surface = Color(0xFFFFFFFF)           // neutrales Weiß
-    val SurfaceVariant = Color(0xFFF2F0F7)     // RGB(242,240,247)
-    val OutlineVariant = Color(0xFFDAD6E6)     // RGB(218,214,230)
-    val TextPrimary = Color(0xFF18181C)        // RGB(24,24,28)
-    val TextSecondary = Color(0xFF62606E)      // RGB(98,96,110)
-}
-
 /**
  * Horizontale scrollbare Liste der Fokus-Bereiche.
  */
@@ -57,12 +38,10 @@ fun FocusAreaSelector(
             .fillMaxWidth()
             .height(selectorHeight)
     ) {
-        // Inhalt: horizontale Liste
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(scrollState)
-                // kleiner Trick: extra End-Padding, damit der Fade rechts nicht das letzte Item überdeckt
                 .padding(end = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -76,7 +55,7 @@ fun FocusAreaSelector(
             }
         }
 
-        // Rechts-Fade (Scroll-Hint)
+        // Rechts-Fade
         if (scrollState.canScrollForward) {
             Box(
                 modifier = Modifier
@@ -94,7 +73,7 @@ fun FocusAreaSelector(
             )
         }
 
-        // Links-Fade (optional, zeigt: du kannst auch zurückscrollen)
+        // Links-Fade
         if (scrollState.canScrollBackward) {
             Box(
                 modifier = Modifier
@@ -124,14 +103,9 @@ private fun FocusAreaItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Unselected: clean/neutral
-    // Selected: lila Container + lila Border
     val backgroundColor = if (isSelected) FitNFocusColors.PurpleContainer else FitNFocusColors.Surface
-
     val borderColor = if (isSelected) FitNFocusColors.PurplePrimary else FitNFocusColors.OutlineVariant
-
     val iconTint = if (isSelected) FitNFocusColors.PurplePrimary else FitNFocusColors.TextSecondary
-
     val labelColor = if (isSelected) FitNFocusColors.PurplePrimary else FitNFocusColors.TextSecondary
 
     Column(
@@ -140,7 +114,6 @@ private fun FocusAreaItem(
             .clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Kreisförmiger Icon-Container
         Box(
             modifier = Modifier
                 .size(56.dp)
@@ -163,7 +136,6 @@ private fun FocusAreaItem(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Label
         Text(
             text = area.displayName,
             style = MaterialTheme.typography.labelSmall,
@@ -174,5 +146,4 @@ private fun FocusAreaItem(
         )
     }
 }
-
 

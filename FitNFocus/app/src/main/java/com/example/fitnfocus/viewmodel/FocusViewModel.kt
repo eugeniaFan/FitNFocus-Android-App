@@ -25,12 +25,6 @@ class FocusViewModel(
     private val topicProgressRepository: TopicProgressRepository
 ) : ViewModel() {
 
-    private val dateFormatter: DateTimeFormatter? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        DateTimeFormatter.ofPattern("dd.MM.yyyy")
-    } else {
-        null
-    }
-
     // Geplante Sessions für heute
     private val _plannedSessions = MutableStateFlow<List<StudySession>>(emptyList())
     val plannedSessions = _plannedSessions.asStateFlow()
@@ -123,7 +117,7 @@ class FocusViewModel(
                     }
 
                     // Alle offenen Sessions für dieses Topic abschließen
-                    sessionRepository.completeAllSessionsForTopic(topic)
+                    sessionRepository.completeAllSessionsForTopic(topic, goalId)
                 }
 
                 // Timer zurücksetzen

@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.timer
+package com.example.fitnfocus.ui.goals.study.timer
 
 /**
  * UI-State für den Session-Timer-Screen.

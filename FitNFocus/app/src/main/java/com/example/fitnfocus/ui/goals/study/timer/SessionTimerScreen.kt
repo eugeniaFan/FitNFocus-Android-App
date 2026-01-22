@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.timer
+package com.example.fitnfocus.ui.goals.study.timer
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image

@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.components
+package com.example.fitnfocus.ui.goals.study.dialogs
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -32,7 +32,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -41,6 +40,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * BottomSheet zum Hinzufügen eines neuen Lernziels (ähnlich wie Onboarding: Modul + Themen + Prüfungsdatum).
@@ -204,7 +204,7 @@ fun AddLearningGoalBottomSheet(
                             val date = Instant.ofEpochMilli(millis)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
-                            val formatted = date.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                            val formatted = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
                             onExamDateTextChange(formatted)
                         }
                         showDatePicker.value = false
@@ -219,3 +219,4 @@ fun AddLearningGoalBottomSheet(
         }
     }
 }
+

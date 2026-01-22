@@ -1,5 +1,7 @@
 package com.example.fitnfocus.viewmodel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnfocus.data.repository.ActivityRepository
@@ -17,7 +19,8 @@ class ActivityViewModel(
     private val _activity = MutableStateFlow<DailyActivity?>(null)
     val activity = _activity.asStateFlow()
 
-    fun loadActivity(date: String) {
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun loadActivity(date: LocalDate) {
         viewModelScope.launch {
             _activity.value = repository.getActivityByDate(date)
         }
@@ -25,7 +28,7 @@ class ActivityViewModel(
 
 
     fun addSteps(stepsToAdd: Int) {
-        val today = LocalDate.now().toString()
+        val today = LocalDate.now()
         viewModelScope.launch {
             val current = repository.getActivityByDate(today)
                 ?: DailyActivity(

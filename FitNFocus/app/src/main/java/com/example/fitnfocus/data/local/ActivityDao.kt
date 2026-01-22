@@ -7,10 +7,14 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
+/**
+ * Erst mal nicht in Nutzung.
+ */
+
 @Dao
 interface ActivityDao {
-    @Query("SELECT * FROM daily_activity WHERE date = :date")
-    suspend fun getActivityByDate(date: String): DailyActivityEntity?
+    @Query("SELECT * FROM daily_activity WHERE epochDay = :epochDay")
+    suspend fun getActivityByEpochDay(epochDay: Long): DailyActivityEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertActivity(activity: DailyActivityEntity)
@@ -21,4 +25,9 @@ interface ActivityDao {
     @Delete
     suspend fun deleteActivity(activity: DailyActivityEntity)
 
+    /**
+     * Löscht alle Aktivitäten.
+     */
+    @Query("DELETE FROM daily_activity")
+    suspend fun deleteAll()
 }

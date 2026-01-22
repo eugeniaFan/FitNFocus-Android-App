@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.components
+package com.example.fitnfocus.ui.goals.study.detail
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -24,8 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.LearningGoal
-import com.example.fitnfocus.ui.theme.FitNFocusDarkColorScheme
-import com.example.fitnfocus.viewmodel.TopicStatus
+import com.example.fitnfocus.ui.goals.study.TopicStatus
+import com.example.fitnfocus.ui.goals.study.overview.components.FitNFocusColors
 import java.time.format.DateTimeFormatter
 
 
@@ -34,7 +34,7 @@ import java.time.format.DateTimeFormatter
  */
 @SuppressLint("NewApi")
 @Composable
-fun LearningGoalDetail(
+fun GoalDetailScreen(
     modifier: Modifier = Modifier,
     goal: LearningGoal,
     topicProgress: Map<String, Boolean>,
@@ -49,10 +49,7 @@ fun LearningGoalDetail(
         completedCount.toFloat() / goal.topics.size
     } else 0f
 
-    Column(
-        modifier = modifier.fillMaxSize(),
-    ) {
-        // Header mit Zurück-Button
+    Column(modifier = modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.height(28.dp))
         Row(
             modifier = Modifier
@@ -61,10 +58,7 @@ fun LearningGoalDetail(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück"
-                )
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
             }
 
             Text(
@@ -75,16 +69,11 @@ fun LearningGoalDetail(
                 textAlign = TextAlign.Center
             )
 
-            // Edit Action
             IconButton(onClick = { onEditClick(goal) }) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Lernziel bearbeiten"
-                )
+                Icon(imageVector = Icons.Default.Edit, contentDescription = "Lernziel bearbeiten")
             }
         }
 
-        // Prüfungsdatum anzeigen (falls vorhanden)
         goal.examDate?.let { date ->
             Row(
                 modifier = Modifier
@@ -107,7 +96,6 @@ fun LearningGoalDetail(
                 Text(
                     text = "Prüfung am $formattedDate",
                     style = MaterialTheme.typography.bodyMedium,
-                    //color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -116,10 +104,7 @@ fun LearningGoalDetail(
         // Fortschritts-Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = FitNFocusColors.PurplePrimary
-            )
-
+            colors = CardDefaults.cardColors(containerColor = FitNFocusColors.PurplePrimary)
         ) {
             Column(
                 modifier = Modifier
@@ -176,7 +161,6 @@ fun LearningGoalDetail(
         }
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Themen-Liste
         Text(
             text = "Themen",
             style = MaterialTheme.typography.titleMedium,
@@ -214,9 +198,6 @@ fun LearningGoalDetail(
     }
 }
 
-/**
- * Einzelnes Thema in der Timeline mit Checkbox.
- */
 @Composable
 private fun TopicTimelineItem(
     topic: String,
@@ -227,40 +208,35 @@ private fun TopicTimelineItem(
     onToggle: () -> Unit,
     onClick: () -> Unit,
 ) {
-    // Status-Text basierend auf TopicStatus
     val statusText = when (topicStatus) {
         TopicStatus.COMPLETED -> "Abgeschlossen"
         TopicStatus.IN_PROGRESS -> "In Bearbeitung"
         TopicStatus.NOT_STARTED -> "Nicht gestartet"
     }
 
-    // Status-Farbe
     val statusColor = when (topicStatus) {
         TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
         TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
         TopicStatus.NOT_STARTED -> FitNFocusColors.TextSecondary
     }
-// Linie (Connector) passend zum Status
+
     val connectorColor = when (topicStatus) {
         TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
         TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
         TopicStatus.NOT_STARTED -> FitNFocusColors.OutlineVariant
     }
 
-    // Card-Background passend zum Status (ohne Alpha-Washout)
     val cardColor = when (topicStatus) {
         TopicStatus.COMPLETED -> FitNFocusColors.SurfaceVariant
         TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeSoft
         TopicStatus.NOT_STARTED -> Color.White
     }
 
-    // Icon-Tint im Kreis (Kontrast)
     val circleIconTint = when (topicStatus) {
         TopicStatus.COMPLETED, TopicStatus.IN_PROGRESS -> Color.White
         TopicStatus.NOT_STARTED -> FitNFocusColors.TextSecondary
     }
 
-    // Topic-Textfarbe
     val topicTextColor = if (isCompleted) FitNFocusColors.TextSecondary else FitNFocusColors.TextPrimary
 
     Row(
@@ -269,12 +245,10 @@ private fun TopicTimelineItem(
             .clickable(onClick = onClick)
             .padding(vertical = 2.dp)
     ) {
-        // Timeline-Spalte
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.width(40.dp)
         ) {
-            // Obere Linie
             if (!isFirst) {
                 Surface(
                     color = connectorColor,
@@ -286,7 +260,6 @@ private fun TopicTimelineItem(
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
-            // Checkbox-Kreis
             Box(
                 modifier = Modifier
                     .size(24.dp)
@@ -308,21 +281,16 @@ private fun TopicTimelineItem(
                         modifier = Modifier.size(16.dp),
                         tint = circleIconTint
                     )
-
                     TopicStatus.IN_PROGRESS -> Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = "In Bearbeitung",
                         modifier = Modifier.size(14.dp),
                         tint = circleIconTint
                     )
-
-                    TopicStatus.NOT_STARTED -> {
-                        /* Leerer Kreis */
-                    }
+                    TopicStatus.NOT_STARTED -> { /* Leerer Kreis */ }
                 }
             }
 
-            // Untere Linie
             if (!isLast) {
                 Surface(
                     color = connectorColor,
@@ -333,7 +301,6 @@ private fun TopicTimelineItem(
             }
         }
 
-        // Content
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -367,3 +334,4 @@ private fun TopicTimelineItem(
         }
     }
 }
+

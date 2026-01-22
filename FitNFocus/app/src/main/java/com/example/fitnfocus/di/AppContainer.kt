@@ -6,6 +6,7 @@ import com.example.fitnfocus.data.repository.LearningGoalRepository
 import com.example.fitnfocus.data.repository.SessionRepository
 import com.example.fitnfocus.data.repository.TopicProgressRepository
 import com.example.fitnfocus.data.repository.UserPreferencesRepository
+import com.example.fitnfocus.domain.usecase.SetTopicCompletionUseCase
 
 interface AppContainer {
     val activityRepository: ActivityRepository
@@ -14,4 +15,5 @@ interface AppContainer {
     val calendarExporter: CalendarExporter
     val userPreferencesRepository: UserPreferencesRepository
     val learningGoalRepository: LearningGoalRepository
+    val setTopicCompletionUseCase: SetTopicCompletionUseCase
 }

@@ -26,9 +26,9 @@ import androidx.room.PrimaryKey
 )
 data class TopicProgressEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val goalId: Int,                    // FK zu LearningGoal
-    val topicName: String,              // Name des Topics
-    val isCompleted: Boolean = false,   // Abgeschlossen ja/nein
-    val completedAt: String? = null     // Datum des Abschlusses (Format: dd.MM.yyyy)
+    val goalId: Int,                       // FK zu LearningGoal
+    val topicName: String,                 // Name des Topics
+    val isCompleted: Boolean = false,      // Abgeschlossen ja/nein
+    val completedAtEpochDay: Long? = null  // Datum des Abschlusses als epochDay
 )
 

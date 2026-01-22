@@ -7,7 +7,7 @@ import androidx.room.Entity
 data class LearningGoalEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val moduleName: String,
-    val topics: String,           // Komma-separiert: "Thema1,Thema2"
+    val topics: String,                // Themen der Lernziele
     val isCompleted: Boolean = false,
-    val examDate: String? = null,
+    val examEpochDay: Long? = null,    // Prüfungsdatum als epochDay (Tage seit 1970-01-01)
 )

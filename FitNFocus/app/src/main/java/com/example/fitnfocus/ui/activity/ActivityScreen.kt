@@ -1,5 +1,7 @@
 package com.example.fitnfocus.ui.activity
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,7 @@ import com.example.fitnfocus.viewmodel.ActivityViewModel
 import java.time.LocalDate
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScreen(
@@ -44,7 +47,7 @@ fun ActivityScreen(
 ) {
     val todayActivity by viewModel.activity.collectAsState()
 
-    val today = LocalDate.now().toString()
+    val today = LocalDate.now()
 
     LaunchedEffect(today) {
         viewModel.loadActivity(today)

@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.timer
+package com.example.fitnfocus.ui.goals.study.timer
 
 /**
  * Status des Session-Timers (Presentation Layer).

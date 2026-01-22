@@ -19,14 +19,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.fitnfocus.data.repository.UserPreferencesRepository
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.ui.navigation.FitNFocusNavHost
 import com.example.fitnfocus.ui.navigation.NavRoutes
+import com.example.fitnfocus.viewmodel.MainUiState
+import com.example.fitnfocus.viewmodel.MainViewModel
 import com.example.fitnfocus.viewmodel.StudyViewModel
 
 
@@ -37,10 +37,9 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    // Onboarding-Status aus UserPreferencesRepository lesen
-    val context = LocalContext.current
-    val userPreferencesRepository = UserPreferencesRepository(context)
-    val isOnboarded by userPreferencesRepository.isOnboardedFlow.collectAsState(initial = null)
+    // Onboarding-Status über MainViewModel (saubere Architektur: UI → ViewModel → Repository)
+    val mainViewModel: MainViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    val mainUiState by mainViewModel.uiState.collectAsState()
 
     // ==================== SHARED VIEWMODELS ====================
     // StudyViewModel auf App-Ebene erstellen, damit der State zwischen Tab-Wechseln erhalten bleibt
@@ -49,19 +48,13 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
     // Prüfe ob Focus-Screen mit aktivem Timer ist
     // Navbar nur ausblenden wenn sessionId > 0 im Argument UND in der Route
     val sessionIdArg = backStackEntry?.arguments?.getInt("sessionId") ?: -1
-    val routeContainsSession = currentRoute?.contains("sessionId=") == true &&
-            currentRoute?.contains("sessionId=-1") != true
+    val routeContainsSession = currentRoute?.contains("sessionId=") == true && !currentRoute.contains("sessionId=-1")
     val isFocusTimerActive = currentRoute?.startsWith("focus") == true &&
             sessionIdArg > 0 &&
             routeContainsSession
 
-    // BottomBar nur anzeigen, wenn nicht im Onboarding und nicht im aktiven Timer
-    val showBottomBar = currentRoute != NavRoutes.Onboarding.route &&
-            isOnboarded == true &&
-            !isFocusTimerActive
-
     // Während des Ladens einen Ladebildschirm anzeigen
-    if (isOnboarded == null) {
+    if (mainUiState is MainUiState.Loading) {
         Box(
             modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -71,8 +64,16 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
         return
     }
 
+    // Ab hier ist mainUiState garantiert Ready
+    val isOnboarded = (mainUiState as MainUiState.Ready).isOnboarded
+
+    // BottomBar nur anzeigen, wenn nicht im Onboarding und nicht im aktiven Timer
+    val showBottomBar = currentRoute != NavRoutes.Onboarding.route &&
+            isOnboarded &&
+            !isFocusTimerActive
+
     // startDestination basierend auf Onboarding-Status
-    val startDestination = if (isOnboarded == true) {
+    val startDestination = if (isOnboarded) {
         NavRoutes.Home.route  // Onboarding gemacht -> Dashboard
     } else {
         NavRoutes.Onboarding.route  // Onboarding nicht gemacht -> Onboarding
@@ -97,8 +98,7 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
                     )
 
                     // Focus - Timer & Sammelfiguren
-                    NavigationBarItem(
-                        selected = currentRoute == NavRoutes.Focus.route,
+                    NavigationBarItem(selected = currentRoute?.startsWith(NavRoutes.Focus.route) == true,
                         onClick = {
                             navController.navigate(NavRoutes.Focus.route) {
                                 popUpTo(NavRoutes.Home.route) { inclusive = false }

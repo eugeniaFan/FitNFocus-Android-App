@@ -14,16 +14,20 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LearningGoalDao {
 
-    @Query("SELECT * FROM learning_goal ORDER BY examDate ASC")
+    @Query("SELECT * FROM learning_goal ORDER BY examEpochDay ASC")
     fun getAllGoals(): Flow<List<LearningGoalEntity>>
 
     @Query("SELECT * FROM learning_goal WHERE id = :id")
     suspend fun getGoalById(id: Int): LearningGoalEntity?
 
-    @Query("SELECT * FROM learning_goal WHERE isCompleted = 0 ORDER BY examDate ASC")
+    @Query("SELECT * FROM learning_goal WHERE isCompleted = 0 ORDER BY examEpochDay ASC")
     fun getActiveGoals(): Flow<List<LearningGoalEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /**
+     * Fügt ein Goal ein und gibt die generierte ID zurück.
+     * Bei Konflikt (gleiche ID) wird ein Fehler geworfen.
+     */
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertGoal(goal: LearningGoalEntity): Long
 
     @Update
@@ -37,5 +41,11 @@ interface LearningGoalDao {
 
     @Query("UPDATE learning_goal SET isCompleted = :isCompleted WHERE id = :id")
     suspend fun updateCompletionStatus(id: Int, isCompleted: Boolean)
+
+    /**
+     * Löscht alle Lernziele.
+     */
+    @Query("DELETE FROM learning_goal")
+    suspend fun deleteAll()
 }
 

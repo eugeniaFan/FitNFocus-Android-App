@@ -1,12 +1,14 @@
-package com.example.fitnfocus.ui.study.timer
+package com.example.fitnfocus.viewmodel
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnfocus.data.repository.SessionRepository
-import com.example.fitnfocus.data.repository.TopicProgressRepository
 import com.example.fitnfocus.domain.SessionStatus
+import com.example.fitnfocus.domain.usecase.SetTopicCompletionUseCase
+import com.example.fitnfocus.ui.goals.study.timer.SessionTimerUiState
+import com.example.fitnfocus.ui.goals.study.timer.TimerState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,13 +29,12 @@ import kotlinx.coroutines.launch
  * - Focus-Übersicht
  * - Navigation-Status
  * - Welche Session als nächstes kommt
- *
- * Das bleibt beim FocusViewModel.
+
  */
 @RequiresApi(Build.VERSION_CODES.O)
 class SessionTimerViewModel(
     private val sessionRepository: SessionRepository,
-    private val topicProgressRepository: TopicProgressRepository
+    private val setTopicCompletionUseCase: SetTopicCompletionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionTimerUiState())
@@ -191,23 +192,12 @@ class SessionTimerViewModel(
                     sessionRepository.appendSessionNotes(state.sessionId, state.sessionNotes)
                 }
 
-                // Optional: Topic als abgeschlossen markieren
+                // Optional: Topic als abgeschlossen markieren via UseCase (Single Source of Truth)
                 if (state.markTopicAsCompleted && state.goalId != null && state.goalId > 0) {
-                    val alreadyCompleted = topicProgressRepository.isTopicCompleted(
-                        state.goalId,
-                        state.sessionTopic
-                    )
-
-                    if (!alreadyCompleted) {
-                        topicProgressRepository.markTopicCompleted(
-                            state.goalId,
-                            state.sessionTopic,
-                            true
-                        )
-                    }
-
-                    // Alle offenen Sessions für dieses Topic abschließen
-                    sessionRepository.completeAllSessionsForTopic(state.sessionTopic)
+                    // UseCase kümmert sich um:
+                    // 1. TopicProgress markieren
+                    // 2. Alle offenen Sessions für dieses Topic abschließen
+                    setTopicCompletionUseCase(state.goalId, state.sessionTopic, true)
                 }
 
                 // State zurücksetzen
@@ -267,14 +257,6 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Prüft ob der Timer aktiv ist (für FocusScreen).
-     */
-    fun isTimerActive(): Boolean {
-        return _uiState.value.timerState != TimerState.IDLE &&
-               _uiState.value.sessionId > 0
-    }
-
-    /**
      * Cleanup bei ViewModel-Destroy.
      */
     override fun onCleared() {
@@ -282,4 +264,3 @@ class SessionTimerViewModel(
         timerJob?.cancel()
     }
 }
-

@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study
+package com.example.fitnfocus.ui.goals.study
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.example.fitnfocus.di.FitNFocusApplication
-import com.example.fitnfocus.viewmodel.StudyUiEvent
 import com.example.fitnfocus.viewmodel.StudyViewModel
 import kotlinx.coroutines.launch
 

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 
 /**
  * Entity für eine Lernsession.
- * Eine Session ist ein konkretes "Event" - eine Lerneinheit für ein bestimmtes Topic.
+ * Eine Session(Event) ist eine Lerneinheit für ein bestimmtes Topic (Thema).
  */
 @Entity(
     tableName = "study_session",
@@ -22,16 +22,16 @@ import androidx.room.PrimaryKey
     indices = [
         Index(value = ["goalId"]),
         Index(value = ["topic"]),
-        Index(value = ["date"])
+        Index(value = ["epochDay"])
     ]
 )
 data class StudySessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val topic: String,                 // Das Thema der Session
-    val durationMinutes: Int,
-    val date: String,                  // Format: dd.MM.yyyy
+    val durationMinutes: Int,          // Dauer der Session in Minuten
+    val epochDay: Long,                // Datum als epochDay (Tage seit 1970-01-01)
     val goalId: Int? = null,           // FK zu LearningGoal (nullable!)
     val status: String = "PLANNED",    // PLANNED, IN_PROGRESS, STOPPED, COMPLETED
-    val notes: String = "",            // Notizen/Todos
+    val notes: String = "",            // Notizen/ Todos
     val elapsedSeconds: Int = 0        // Tatsächlich fokussierte Zeit (für Partial Completion)
 )

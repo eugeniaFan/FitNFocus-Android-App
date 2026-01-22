@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.R
 import com.example.fitnfocus.di.AppViewModelProvider
-import com.example.fitnfocus.ui.study.timer.SessionTimerScreen
-import com.example.fitnfocus.ui.study.timer.SessionTimerViewModel
+import com.example.fitnfocus.ui.goals.study.timer.SessionTimerScreen
+import com.example.fitnfocus.viewmodel.SessionTimerViewModel
 import com.example.fitnfocus.viewmodel.FocusViewModel
 
 
@@ -43,6 +43,9 @@ fun FocusScreen(
     val completedSessionsCount by viewModel.completedSessionsCount.collectAsState()
     val activeTimerSession by viewModel.activeTimerSession.collectAsState()
     val timerUiState by timerViewModel.uiState.collectAsState()
+
+    // Verhindert Flackern während Navigation (FocusContent wird nicht kurz angezeigt)
+    var isNavigating by remember { mutableStateOf(false) }
 
     val uiState = FocusUiState(
         coinsTotal = completedSessionsCount,
@@ -74,11 +77,15 @@ fun FocusScreen(
         }
     }
 
-    // Timer-Screen
-    if (uiState.hasActiveTimer) {
+    // Timer-Screen (oder während Navigation: nichts anzeigen)
+    if (uiState.hasActiveTimer || isNavigating) {
         // Safety-Check (Race Condition vermeiden)
         val session = activeTimerSession
         if (session == null) {
+            // Während Navigation: leerer Screen (kein Flackern)
+            if (isNavigating) {
+                return
+            }
             // Fallback: falls hasActiveTimer true wäre, session aber null ist
             FocusContent(
                 state = uiState.copy(hasActiveTimer = false),
@@ -94,13 +101,22 @@ fun FocusScreen(
             onResumeTimer = { timerViewModel.resumeTimer() },
             onStopTimer = { timerViewModel.stopTimer() },
             onConfirmPartialSave = {
+                isNavigating = true
                 timerViewModel.confirmPartialSave {
                     // Nach DB-Operation: Navigation zum Dashboard
-                    viewModel.cancelTimer()
                     onSessionStopped()
+                    viewModel.cancelTimer()
+
                 }
             },
-            onDismissPartialSave = { timerViewModel.dismissPartialSave() },
+            onDismissPartialSave = {
+                isNavigating = true
+                timerViewModel.dismissPartialSave {
+                    onSessionStopped()
+                    viewModel.cancelTimer()
+
+                }
+            },
             onCompleteSession = {
                 timerViewModel.completeSession {
                     // Nach DB-Operation: Navigation zum Focus-Bereich
@@ -117,8 +133,8 @@ fun FocusScreen(
             onAbort = {
                 // Stop/Cancel ohne Speichern → Dashboard
                 timerViewModel.cancelTimer()
-                viewModel.cancelTimer()
                 onSessionStopped()
+                viewModel.cancelTimer()
             }
         )
         return

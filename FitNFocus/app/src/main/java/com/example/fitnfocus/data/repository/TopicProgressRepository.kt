@@ -1,50 +1,22 @@
 package com.example.fitnfocus.data.repository
 
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.example.fitnfocus.data.local.TopicProgressDao
-import com.example.fitnfocus.data.local.TopicProgressEntity
 import com.example.fitnfocus.data.mapper.TopicProgressMapper
-import com.example.fitnfocus.data.mapper.toDomainList
 import com.example.fitnfocus.domain.TopicProgress
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 /**
  * Repository für Topic-Fortschritt.
  * Verwaltet den Abschluss-Status von Topics unabhängig von Sessions.
+ * Domain nutzt LocalDate, Entity nutzt epochDay.
  */
 class TopicProgressRepository(
     private val topicProgressDao: TopicProgressDao
 ) {
-    private val dateFormatter: DateTimeFormatter? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        DateTimeFormatter.ofPattern("dd.MM.yyyy")
-    } else {
-        null
-    }
-
-    /**
-     * Alle Fortschritte als Flow.
-     */
-    fun getAllProgress(): Flow<List<TopicProgress>> {
-        return topicProgressDao.getAllProgress().map { it.toDomainList() }
-    }
-
-    /**
-     * Fortschritt für ein bestimmtes Goal als Flow.
-     */
-    fun getProgressForGoal(goalId: Int): Flow<List<TopicProgress>> {
-        return topicProgressDao.getProgressForGoal(goalId).map { it.toDomainList() }
-    }
-
-    /**
-     * Fortschritt für ein bestimmtes Topic eines Goals.
-     */
-    suspend fun getProgressForTopic(goalId: Int, topicName: String): TopicProgress? {
-        return topicProgressDao.getProgressForTopic(goalId, topicName)
-            ?.let { TopicProgressMapper.entityToDomain(it) }
-    }
 
     /**
      * Prüft ob ein Topic abgeschlossen ist.
@@ -53,62 +25,67 @@ class TopicProgressRepository(
         return topicProgressDao.isTopicCompleted(goalId, topicName) ?: false
     }
 
-    /**
-     * Alle abgeschlossenen Topics eines Goals.
-     */
-    suspend fun getCompletedTopicsForGoal(goalId: Int): List<TopicProgress> {
-        return topicProgressDao.getCompletedTopicsForGoal(goalId).toDomainList()
-    }
-
-    /**
-     * Anzahl abgeschlossener Topics für ein Goal.
-     */
-    suspend fun getCompletedTopicsCount(goalId: Int): Int {
-        return topicProgressDao.getCompletedTopicsCount(goalId)
-    }
 
     /**
      * Alle abgeschlossenen Topics (für Sammelfiguren-Feature).
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getAllCompletedTopics(): Flow<List<TopicProgress>> {
-        return topicProgressDao.getAllCompletedTopics().map { it.toDomainList() }
+        return topicProgressDao.getAllCompletedTopics().map { entities ->
+            entities.map { TopicProgressMapper.entityToDomain(it) }
+        }
     }
 
-    /**
-     * Abgeschlossene Topics an einem bestimmten Datum.
-     */
-    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getCompletedTopicsByDate(date: LocalDate): List<TopicProgress> {
-        val dateString = formatDate(date)
-        return topicProgressDao.getCompletedTopicsByDate(dateString).toDomainList()
-    }
 
     /**
      * Markiert ein Topic als abgeschlossen.
      */
-    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
-    suspend fun markTopicCompleted(goalId: Int, topicName: String, isCompleted: Boolean) {
-        val existingProgress = topicProgressDao.getProgressForTopic(goalId, topicName)
-        val completedAt = if (isCompleted) formatDate(LocalDate.now()) else null
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun markTopicCompleted(
+        goalId: Int,
+        topicName: String,
+        isCompleted: Boolean
+    ) {
 
-        if (existingProgress != null) {
-            // Update existing
-            topicProgressDao.updateCompletionStatus(goalId, topicName, isCompleted, completedAt)
+        val existingEntity = topicProgressDao.getProgressForTopic(goalId, topicName)
+
+        if (existingEntity != null) {
+            // Update bestehenden Domain-Zustand
+            val existingDomain = TopicProgressMapper.entityToDomain(existingEntity)
+
+            val completedAtStable = when {
+                // Wenn es schon ein Datum gibt: immer behalten
+                existingDomain.completedAt != null -> existingDomain.completedAt
+
+                // Wenn es noch kein Datum gibt, aber jetzt completed wird: heute setzen
+                isCompleted -> LocalDate.now()
+
+                // sonst (noch kein Datum, und wird nicht completed): bleibt null
+                else -> null
+            }
+
+            val domainProgress = existingDomain.copy(
+                isCompleted = isCompleted,
+                completedAt = completedAtStable
+            )
+            updateProgress(domainProgress)
         } else {
-            // Insert new
-            val newProgress = TopicProgressEntity(
+            // Neuen Domain-Zustand erzeugen
+            val newDomain = TopicProgress(
+                id = 0, // wird von Room generiert
                 goalId = goalId,
                 topicName = topicName,
                 isCompleted = isCompleted,
-                completedAt = completedAt
+                completedAt = if (isCompleted) LocalDate.now() else null
             )
-            topicProgressDao.insertProgress(newProgress)
+            insertProgress(newDomain)
         }
     }
 
     /**
      * Erstellt einen neuen Topic-Fortschritt.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun insertProgress(progress: TopicProgress): Long {
         return topicProgressDao.insertProgress(TopicProgressMapper.domainToEntity(progress))
     }
@@ -116,34 +93,17 @@ class TopicProgressRepository(
     /**
      * Aktualisiert einen Topic-Fortschritt.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun updateProgress(progress: TopicProgress) {
         topicProgressDao.updateProgress(TopicProgressMapper.domainToEntity(progress))
     }
 
-    /**
-     * Löscht einen Topic-Fortschritt.
-     */
-    suspend fun deleteProgress(progress: TopicProgress) {
-        topicProgressDao.deleteProgress(TopicProgressMapper.domainToEntity(progress))
-    }
 
     /**
      * Löscht alle Fortschritte für ein Goal.
      */
     suspend fun deleteProgressForGoal(goalId: Int) {
         topicProgressDao.deleteProgressForGoal(goalId)
-    }
-
-    /**
-     * Hilfsfunktion zum Formatieren eines LocalDate.
-     */
-    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
-    private fun formatDate(date: LocalDate): String {
-        return if (dateFormatter != null) {
-            date.format(dateFormatter)
-        } else {
-            "${date.dayOfMonth}.${date.monthValue}.${date.year}"
-        }
     }
 }
 

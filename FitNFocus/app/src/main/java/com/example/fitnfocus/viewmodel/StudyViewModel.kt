@@ -12,7 +12,17 @@ import com.example.fitnfocus.domain.FocusArea
 import com.example.fitnfocus.domain.LearningGoal
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.domain.StudySession
-import com.example.fitnfocus.domain.toCalendarEventData
+import com.example.fitnfocus.domain.usecase.SetTopicCompletionUseCase
+import com.example.fitnfocus.calendar.toCalendarEventDataNow
+import com.example.fitnfocus.ui.goals.study.AddGoalUiState
+import com.example.fitnfocus.ui.goals.study.EditGoalUiState
+import com.example.fitnfocus.ui.goals.study.LearningNavigationState
+import com.example.fitnfocus.ui.goals.study.SessionDialogUiState
+import com.example.fitnfocus.ui.goals.study.StudyUiEvent
+import com.example.fitnfocus.ui.goals.study.TopicItem
+import com.example.fitnfocus.ui.goals.study.TopicStatus
+import com.example.fitnfocus.ui.goals.study.sessions.util.formatGermanDate
+import com.example.fitnfocus.ui.goals.study.sessions.util.parseGermanDate
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,41 +32,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
-/**
- * Repräsentiert ein Topic zur Auswahl im Dropdown.
- */
-data class TopicItem(
-    val name: String,
-    val goalId: Int?,           // null = manuell hinzugefügt
-    val goalName: String? = null // Name des Moduls für Anzeige
-)
-
-/**
- * Status eines Topics basierend auf Sessions und TopicProgress.
- */
-enum class TopicStatus {
-    NOT_STARTED,   // Keine Session erstellt
-    IN_PROGRESS,   // Session erstellt, aber nicht abgeschlossen
-    COMPLETED      // Topic als abgeschlossen markiert (in TopicProgress)
-}
-
-/**
- * Navigation-State für den Lern-Bereich.
- */
-sealed class LearningNavigationState {
-    data object Overview : LearningNavigationState()
-    data class GoalDetail(val goalId: Int) : LearningNavigationState()
-    data class TopicDetail(val goalId: Int, val topic: String) : LearningNavigationState()
-    data class SessionTimer(
-        val goalId: Int,
-        val topic: String,
-        val moduleName: String,
-        val durationMinutes: Int,
-        val sessionId: Int
-    ) : LearningNavigationState()
-}
 
 /**
  * ViewModel für den Lern-/Study-Bereich.
@@ -69,106 +44,81 @@ sealed class LearningNavigationState {
 class StudyViewModel(
     private val sessionRepository: SessionRepository,
     private val learningGoalRepository: LearningGoalRepository,
-    private val topicProgressRepository: TopicProgressRepository
+    private val topicProgressRepository: TopicProgressRepository,
+    private val setTopicCompletionUseCase: SetTopicCompletionUseCase
 ) : ViewModel() {
 
-    private val dateFormatter: DateTimeFormatter? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        DateTimeFormatter.ofPattern("dd.MM.yyyy")
-    } else {
-        null
-    }
+    // ==================== GRUPPIERTE UI STATES ====================
 
-    // ==================== LERNZIEL HINZUFÜGEN (BOTTOM SHEET) ====================
+    // Add Goal State
+    private val _addGoalState = MutableStateFlow(AddGoalUiState())
+    val addGoalState = _addGoalState.asStateFlow()
 
-    private val _showAddGoalSheet = MutableStateFlow(false)
-    val showAddGoalSheet = _showAddGoalSheet.asStateFlow()
+    // Edit Goal State
+    private val _editGoalState = MutableStateFlow(EditGoalUiState())
+    val editGoalState = _editGoalState.asStateFlow()
 
-    private val _newGoalModuleName = MutableStateFlow("")
-    val newGoalModuleName = _newGoalModuleName.asStateFlow()
+    // Session Dialog State
+    private val _sessionDialogState = MutableStateFlow(SessionDialogUiState())
+    val sessionDialogState = _sessionDialogState.asStateFlow()
 
-    private val _newGoalExamDateText = MutableStateFlow("") // Format: dd.MM.yyyy
-    val newGoalExamDateText = _newGoalExamDateText.asStateFlow()
-
-    private val _newGoalTopics = MutableStateFlow<List<String>>(emptyList())
-    val newGoalTopics = _newGoalTopics.asStateFlow()
-
-    private val _newGoalCurrentTopic = MutableStateFlow("")
-    val newGoalCurrentTopic = _newGoalCurrentTopic.asStateFlow()
-
-    private val _isSavingGoal = MutableStateFlow(false)
-    val isSavingGoal = _isSavingGoal.asStateFlow()
+    // ==================== LERNZIEL HINZUFÜGEN ====================
 
     fun openAddGoalSheet() {
-        _showAddGoalSheet.value = true
+        _addGoalState.update { it.copy(showSheet = true) }
     }
 
     fun closeAddGoalSheet() {
-        _showAddGoalSheet.value = false
-        _newGoalModuleName.value = ""
-        _newGoalExamDateText.value = ""
-        _newGoalTopics.value = emptyList()
-        _newGoalCurrentTopic.value = ""
+        _addGoalState.value = AddGoalUiState()
     }
 
     fun onNewGoalModuleNameChange(value: String) {
-        _newGoalModuleName.value = value
+        _addGoalState.update { it.copy(moduleName = value) }
     }
 
     fun onNewGoalExamDateTextChange(value: String) {
-        _newGoalExamDateText.value = value
+        _addGoalState.update { it.copy(examDateText = value) }
     }
 
     fun onNewGoalCurrentTopicChange(value: String) {
-        _newGoalCurrentTopic.value = value
+        _addGoalState.update { it.copy(currentTopic = value) }
     }
 
     fun addNewGoalTopic() {
-        val topic = _newGoalCurrentTopic.value.trim()
+        val topic = _addGoalState.value.currentTopic.trim()
         if (topic.isEmpty()) return
-        if (_newGoalTopics.value.any { it.equals(topic, ignoreCase = true) }) {
-            _newGoalCurrentTopic.value = ""
+        if (_addGoalState.value.topics.any { it.equals(topic, ignoreCase = true) }) {
+            _addGoalState.update { it.copy(currentTopic = "") }
             return
         }
-
-        _newGoalTopics.value = _newGoalTopics.value + topic
-        _newGoalCurrentTopic.value = ""
+        _addGoalState.update { it.copy(topics = it.topics + topic, currentTopic = "") }
     }
 
     fun removeNewGoalTopic(topic: String) {
-        _newGoalTopics.value = _newGoalTopics.value - topic
+        _addGoalState.update { it.copy(topics = it.topics - topic) }
     }
 
     fun saveNewLearningGoal() {
         viewModelScope.launch {
-            val module = _newGoalModuleName.value.trim()
+            val state = _addGoalState.value
+            val module = state.moduleName.trim()
             if (module.isEmpty()) return@launch
 
-            _isSavingGoal.value = true
+            _addGoalState.update { it.copy(isSaving = true) }
             try {
-                val rawGerman = _newGoalExamDateText.value.trim().ifBlank { null }
-
-                val examDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    rawGerman?.let {
-                        runCatching {
-                            LocalDate.parse(it, dateFormatter)
-                        }.getOrNull()
-                    }
-                } else {
-                    null
-                }
+                val examDate = parseGermanDate(state.examDateText)
 
                 val goal = LearningGoal(
                     moduleName = module,
-                    topics = _newGoalTopics.value,
+                    topics = state.topics,
                     examDate = examDate
                 )
 
                 learningGoalRepository.insertGoal(goal)
-
                 closeAddGoalSheet()
                 _learningNavState.value = LearningNavigationState.Overview
             } finally {
-                _isSavingGoal.value = false
+                _addGoalState.update { it.copy(isSaving = false) }
             }
         }
     }
@@ -209,7 +159,7 @@ class StudyViewModel(
             val progressMap = mutableMapOf<String, Boolean>()
 
             topics.forEach { topic ->
-                val hasSessions = sessionRepository.hasSessionsForTopic(topic)
+                val hasSessions = sessionRepository.hasSessionsForTopic(topic, goalId)
                 val isCompleted = topicProgressRepository.isTopicCompleted(goalId, topic)
 
                 statusMap[topic] = when {
@@ -232,12 +182,12 @@ class StudyViewModel(
      * Lädt alle Sessions für ein bestimmtes Topic (sortiert nach Datum).
      * Cancelled vorherige Lade-Jobs um Race-Conditions zu vermeiden.
      */
-    fun loadSessionsForTopic(topic: String) {
+    fun loadSessionsForTopic(topic: String, goalId: Int) {
         // Vorherigen Job canceln
         loadTopicSessionsJob?.cancel()
 
         loadTopicSessionsJob = viewModelScope.launch {
-            sessionRepository.getSessionsForTopicFlow(topic).collect { sessions ->
+            sessionRepository.getSessionsForTopicFlow(topic, goalId).collect { sessions ->
                 _topicSessions.value = sessions
             }
         }
@@ -250,16 +200,12 @@ class StudyViewModel(
 
     fun navigateToTopicDetail(goal: LearningGoal, topic: String) {
         _learningNavState.value = LearningNavigationState.TopicDetail(goalId = goal.id, topic = topic)
-        loadSessionsForTopic(topic)
+        loadSessionsForTopic(topic, goal.id)
     }
 
     fun navigateBackToOverview() {
         _learningNavState.value = LearningNavigationState.Overview
         refreshAllProgress()
-    }
-
-    fun navigateBackToGoalDetail(goal: LearningGoal) {
-        _learningNavState.value = LearningNavigationState.GoalDetail(goalId = goal.id)
     }
 
     fun navigateToGoalDetailById(goalId: Int) {
@@ -272,27 +218,28 @@ class StudyViewModel(
 
     /**
      * Markiert ein Topic als erledigt oder nicht erledigt.
-     * Speichert in TopicProgress-Tabelle und schließt bei Bedarf alle Sessions ab.
+     * Verwendet SetTopicCompletionUseCase als Single Source of Truth.
      */
     fun toggleTopicProgress(goalId: Int, topicName: String, isCompleted: Boolean) {
         viewModelScope.launch {
             try {
-                topicProgressRepository.markTopicCompleted(goalId, topicName, isCompleted)
+                val wasChanged = setTopicCompletionUseCase(goalId, topicName, isCompleted)
 
-                // Wenn Topic abgeschlossen wird: alle offenen Sessions auch abschließen
-                if (isCompleted) {
-                    sessionRepository.completeAllSessionsForTopic(topicName)
-                }
-
+                // Lokale State Maps aktualisieren
                 _topicProgress.update { current ->
-                    current.toMutableMap().apply {
-                        put(topicName, isCompleted)
-                    }
+                    current.toMutableMap().apply { put(topicName, isCompleted) }
                 }
                 _topicStatusMap.update { current ->
                     current.toMutableMap().apply {
                         put(topicName, if (isCompleted) TopicStatus.COMPLETED else TopicStatus.IN_PROGRESS)
                     }
+                }
+
+                if (wasChanged) {
+                    _uiEvents.tryEmit(
+                        if (isCompleted) StudyUiEvent.ShowMessage("Thema als abgeschlossen markiert!")
+                        else StudyUiEvent.ShowMessage("Thema-Status zurückgesetzt.")
+                    )
                 }
             } catch (e: Exception) {
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Fehler beim Aktualisieren des Thema-Status."))
@@ -308,7 +255,7 @@ class StudyViewModel(
             sessionRepository.updateSessionStatus(sessionId, status)
             val navState = _learningNavState.value
             if (navState is LearningNavigationState.TopicDetail) {
-                loadSessionsForTopic(navState.topic)
+                loadSessionsForTopic(navState.topic, navState.goalId)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val today = LocalDate.now()
@@ -340,79 +287,37 @@ class StudyViewModel(
 
     /**
      * Markiert ein Topic als abgeschlossen.
-     * Speichert in TopicProgress-Tabelle und schließt alle offenen Sessions ab.
+     * Alias für toggleTopicProgress - verwendet SetTopicCompletionUseCase.
      */
     fun markTopicAsCompleted(goalId: Int, topic: String, isCompleted: Boolean) {
+        toggleTopicProgress(goalId, topic, isCompleted)
+        // Sessions für dieses Topic neu laden
         viewModelScope.launch {
-            try {
-                // Prüfen ob Topic bereits den gewünschten Status hat
-                val currentStatus = topicProgressRepository.isTopicCompleted(goalId, topic)
-                if (currentStatus == isCompleted) {
-                    // Status ist bereits korrekt, nichts zu tun
-                    return@launch
-                }
-
-                topicProgressRepository.markTopicCompleted(goalId, topic, isCompleted)
-
-                // Wenn Topic abgeschlossen wird: alle offenen Sessions auch abschließen
-                if (isCompleted) {
-                    sessionRepository.completeAllSessionsForTopic(topic)
-                }
-
-                _topicProgress.update { current ->
-                    current.toMutableMap().apply {
-                        put(topic, isCompleted)
-                    }
-                }
-                _topicStatusMap.update { current ->
-                    current.toMutableMap().apply {
-                        put(topic, if (isCompleted) TopicStatus.COMPLETED else TopicStatus.IN_PROGRESS)
-                    }
-                }
-
-                loadSessionsForTopic(topic)
-                _uiEvents.tryEmit(
-                    if (isCompleted) StudyUiEvent.ShowMessage("Thema als abgeschlossen markiert!")
-                    else StudyUiEvent.ShowMessage("Thema-Status zurückgesetzt.")
-                )
-            } catch (e: Exception) {
-                _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Fehler beim Aktualisieren des Thema-Status."))
-            }
+            loadSessionsForTopic(topic, goalId)
         }
     }
 
     /**
      * Startet eine Session für ein bestimmtes Topic.
      */
-    fun startSessionForTopic(topic: String) {
-        _topic.value = topic
-        _selectedTopic.value = TopicItem(name = topic, goalId = null)
-        setShowAddDialog(true)
+    fun startSessionForTopic(goalId: Int, topic: String, moduleName: String) {
+        _sessionDialogState.update {
+            it.copy(
+                newTopic = topic,
+                selectedTopic = TopicItem(
+                    name = topic,
+                    goalId = goalId,
+                    goalName = moduleName
+                ),
+                showAddDialog = true
+            )
+        }
     }
-
-    // ==================== UI INPUTS ====================
-
-    private val _topic = MutableStateFlow("")
-    val topic = _topic.asStateFlow()
-
-    private val _duration = MutableStateFlow("")
-    val duration = _duration.asStateFlow()
-
-    // Ausgewähltes Topic (aus Dropdown oder manuell)
-    private val _selectedTopic = MutableStateFlow<TopicItem?>(null)
-    val selectedTopic = _selectedTopic.asStateFlow()
-
-    // Manueller Eingabemodus vs. Dropdown
-    private val _isManualInput = MutableStateFlow(false)
-    val isManualInput = _isManualInput.asStateFlow()
 
     // ==================== UI STATES ====================
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
-
-    private val _showAddDialog = MutableStateFlow(false)
-    val showAddDialog = _showAddDialog.asStateFlow()
 
     private val _todaySessions = MutableStateFlow<List<StudySession>>(emptyList())
     val todaySessions = _todaySessions.asStateFlow()
@@ -432,9 +337,6 @@ class StudyViewModel(
             initialValue = emptyList()
         )
 
-    private val _availableTopics = MutableStateFlow<List<TopicItem>>(emptyList())
-    val availableTopics = _availableTopics.asStateFlow()
-
     // ==================== EVENTS ====================
 
     private val _uiEvents = MutableSharedFlow<StudyUiEvent>(extraBufferCapacity = 8)
@@ -443,7 +345,6 @@ class StudyViewModel(
     init {
         viewModelScope.launch {
             learningGoals.collect { goals ->
-                updateAvailableTopics(goals)
                 loadAllTopicStatuses(goals)
             }
         }
@@ -456,7 +357,7 @@ class StudyViewModel(
 
             goals.forEach { goal ->
                 goal.topics.forEach { topic ->
-                    val hasSessions = sessionRepository.hasSessionsForTopic(topic)
+                    val hasSessions = sessionRepository.hasSessionsForTopic(topic, goal.id)
                     val isCompleted = topicProgressRepository.isTopicCompleted(goal.id, topic)
 
                     allStatusMap[topic] = when {
@@ -480,76 +381,18 @@ class StudyViewModel(
         }
     }
 
-    private fun updateAvailableTopics(goals: List<LearningGoal>) {
-        val topics = mutableListOf<TopicItem>()
-
-        goals.forEach { goal ->
-            topics.add(TopicItem(
-                name = goal.moduleName,
-                goalId = goal.id,
-                goalName = null
-            ))
-
-            goal.topics.forEach { topicName ->
-                topics.add(TopicItem(
-                    name = topicName,
-                    goalId = goal.id,
-                    goalName = goal.moduleName
-                ))
-            }
-        }
-
-        _availableTopics.value = topics
-    }
-
     // ==================== DIALOG ACTIONS ====================
 
     fun setShowAddDialog(value: Boolean) {
-        _showAddDialog.value = value
-        if (!value) {
-            resetForm()
+        if (value) {
+            _sessionDialogState.update { it.copy(showAddDialog = true) }
+        } else {
+            _sessionDialogState.value = SessionDialogUiState()
         }
     }
 
     fun selectSession(session: StudySession?) {
         _selectedSession.value = session
-    }
-
-    // ==================== FORM INPUTS ====================
-
-    fun onTopicChange(newValue: String) {
-        _topic.value = newValue
-    }
-
-    fun onDurationChange(newValue: String) {
-        _duration.value = newValue
-    }
-
-    fun selectTopic(topicItem: TopicItem) {
-        _selectedTopic.value = topicItem
-        _topic.value = topicItem.name
-        _isManualInput.value = false
-    }
-
-    fun toggleManualInput() {
-        _isManualInput.value = !_isManualInput.value
-        if (_isManualInput.value) {
-            _selectedTopic.value = null
-        }
-    }
-
-    fun setManualInput(enabled: Boolean) {
-        _isManualInput.value = enabled
-        if (enabled) {
-            _selectedTopic.value = null
-        }
-    }
-
-    private fun resetForm() {
-        _topic.value = ""
-        _duration.value = ""
-        _selectedTopic.value = null
-        _isManualInput.value = false
     }
 
     // ==================== DATA OPERATIONS ====================
@@ -573,7 +416,18 @@ class StudyViewModel(
             _isLoading.value = true
             try {
                 sessionRepository.updateSession(session)
-                _todaySessions.value = sessionRepository.getSessionsByDate(session.date)
+
+                // Today-Sessions aktualisieren
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    _todaySessions.value = sessionRepository.getSessionsByDate(session.date)
+                }
+
+                // Topic-Sessions aktualisieren (für die aktuelle Detail-Ansicht)
+                val navState = _learningNavState.value
+                if (navState is LearningNavigationState.TopicDetail) {
+                    loadSessionsForTopic(navState.topic, navState.goalId)
+                }
+
                 _selectedSession.value = null
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session aktualisiert."))
             } catch (e: Exception) {
@@ -590,7 +444,18 @@ class StudyViewModel(
             try {
                 sessionRepository.deleteSession(session)
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session gelöscht."))
-                _todaySessions.value = sessionRepository.getSessionsByDate(session.date)
+
+                // Today-Sessions aktualisieren
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    _todaySessions.value = sessionRepository.getSessionsByDate(session.date)
+                }
+
+                // Topic-Sessions aktualisieren (für die aktuelle Detail-Ansicht)
+                val navState = _learningNavState.value
+                if (navState is LearningNavigationState.TopicDetail) {
+                    loadSessionsForTopic(navState.topic, navState.goalId)
+                }
+
                 _selectedSession.value = null
             } catch (e: Exception) {
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Löschen fehlgeschlagen."))
@@ -604,9 +469,9 @@ class StudyViewModel(
      * Speichert eine neue Session.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    fun saveSession(addToCalendar: Boolean = false, goalIdForNewTopic: Int? = null, startTimer: Boolean = false) {
-        val cleanedTopic = _topic.value.trim()
-        val minutes = _duration.value.toIntOrNull()
+    fun saveSession(durationMinutes: Int, addToCalendar: Boolean = false, startTimer: Boolean = false) {
+        val state = _sessionDialogState.value
+        val cleanedTopic = state.newTopic.trim()
         val today = LocalDate.now()
 
         if (cleanedTopic.isEmpty()) {
@@ -614,17 +479,17 @@ class StudyViewModel(
             return
         }
 
-        if (minutes == null || minutes <= 0) {
+        if (durationMinutes <= 0) {
             _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Bitte eine gültige Dauer eingeben."))
             return
         }
 
-        val goalId = _selectedTopic.value?.goalId ?: goalIdForNewTopic
+        val goalId = state.selectedTopic?.goalId
 
         val session = StudySession(
             id = 0,
             topic = cleanedTopic,
-            durationMinutes = minutes,
+            durationMinutes = durationMinutes,
             date = today,
             goalId = goalId,
             status = SessionStatus.PLANNED,
@@ -634,11 +499,8 @@ class StudyViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val sessionId = sessionRepository.insertSessionAndGetId(session)
+                val sessionId = sessionRepository.insertSession(session)
 
-                if (_isManualInput.value && goalIdForNewTopic != null) {
-                    addTopicToGoal(goalIdForNewTopic, cleanedTopic)
-                }
 
                 _topicStatusMap.update { current ->
                     current.toMutableMap().apply {
@@ -652,14 +514,15 @@ class StudyViewModel(
                     "Lernen"
                 }
 
-                resetForm()
+                // Form zurücksetzen
+                _sessionDialogState.value = SessionDialogUiState()
                 _lastSavedSession.value = session.copy(id = sessionId.toInt())
 
                 loadSessionsForDate(today)
 
                 val navState = _learningNavState.value
                 if (navState is LearningNavigationState.TopicDetail && navState.topic == cleanedTopic) {
-                    loadSessionsForTopic(cleanedTopic)
+                    loadSessionsForTopic(cleanedTopic, navState.goalId)
                 }
 
                 _uiEvents.tryEmit(StudyUiEvent.CloseAddDialog)
@@ -669,7 +532,7 @@ class StudyViewModel(
                         goalId = goalId,
                         topic = cleanedTopic,
                         moduleName = moduleName,
-                        durationMinutes = minutes,
+                        durationMinutes = durationMinutes,
                         sessionId = sessionId.toInt()
                     )
                 } else {
@@ -677,7 +540,7 @@ class StudyViewModel(
                 }
 
                 if (addToCalendar) {
-                    val eventData = session.toCalendarEventData()
+                    val eventData = session.toCalendarEventDataNow()
                     _uiEvents.emit(StudyUiEvent.OpenCalendarInsert(eventData))
                 }
             } catch (e: Exception) {
@@ -709,8 +572,7 @@ class StudyViewModel(
 
     /**
      * Wird aufgerufen wenn der Timer abgeschlossen wird.
-     * Hinweis: Notizen werden bereits im SessionTimerViewModel gespeichert (appendSessionNotes),
-     * daher hier NICHT nochmal speichern um Überschreiben zu vermeiden.
+     * Verwendet SetTopicCompletionUseCase für Topic-Completion.
      */
     fun onTimerCompleted(sessionId: Int, goalId: Int, topic: String, markTopicCompleted: Boolean, notes: String = "") {
         viewModelScope.launch {
@@ -718,30 +580,15 @@ class StudyViewModel(
                 // Session auf COMPLETED setzen (falls noch nicht geschehen)
                 sessionRepository.updateSessionStatus(sessionId, SessionStatus.COMPLETED)
 
-                // WICHTIG: Notizen werden NICHT hier gespeichert!
-                // Sie wurden bereits im SessionTimerViewModel mit appendSessionNotes() angehängt.
-
-                // Topic als abgeschlossen markieren (nur wenn goalId gültig ist)
+                // Topic als abgeschlossen markieren via UseCase (nur wenn goalId gültig ist)
                 if (markTopicCompleted && goalId > 0) {
-                    // Prüfen ob Topic bereits abgeschlossen ist
-                    val alreadyCompleted = topicProgressRepository.isTopicCompleted(goalId, topic)
-
-                    if (!alreadyCompleted) {
-                        topicProgressRepository.markTopicCompleted(goalId, topic, true)
-                    }
-
-                    // Alle offenen Sessions für dieses Topic abschließen
-                    sessionRepository.completeAllSessionsForTopic(topic)
+                    setTopicCompletionUseCase(goalId, topic, true)
 
                     _topicProgress.update { current ->
-                        current.toMutableMap().apply {
-                            put(topic, true)
-                        }
+                        current.toMutableMap().apply { put(topic, true) }
                     }
                     _topicStatusMap.update { current ->
-                        current.toMutableMap().apply {
-                            put(topic, TopicStatus.COMPLETED)
-                        }
+                        current.toMutableMap().apply { put(topic, TopicStatus.COMPLETED) }
                     }
                 }
 
@@ -752,7 +599,7 @@ class StudyViewModel(
                         goalId = navState.goalId,
                         topic = topic
                     )
-                    loadSessionsForTopic(topic)
+                    loadSessionsForTopic(topic, goalId)
                 }
 
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage(
@@ -764,20 +611,6 @@ class StudyViewModel(
         }
     }
 
-    private suspend fun addTopicToGoal(goalId: Int, newTopic: String) {
-        try {
-            val goal = learningGoalRepository.getGoalById(goalId) ?: return
-
-            if (newTopic !in goal.topics) {
-                val updatedGoal = goal.copy(
-                    topics = goal.topics + newTopic
-                )
-                learningGoalRepository.updateGoal(updatedGoal)
-            }
-        } catch (e: Exception) {
-            // Ignorieren
-        }
-    }
 
     // ==================== LÖSCHEN (CONFIRMATION) ====================
 
@@ -796,7 +629,7 @@ class StudyViewModel(
         val goal = _goalPendingDelete.value ?: return
         viewModelScope.launch {
             try {
-                // Auch TopicProgress löschen
+                sessionRepository.deleteSessionsForGoal(goal.id)
                 topicProgressRepository.deleteProgressForGoal(goal.id)
                 learningGoalRepository.deleteGoal(goal)
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Lernziel gelöscht."))
@@ -809,106 +642,65 @@ class StudyViewModel(
         }
     }
 
-    // ==================== LERNZIEL BEARBEITEN (EDIT BOTTOM SHEET) ====================
-
-    private val _showEditGoalSheet = MutableStateFlow(false)
-    val showEditGoalSheet = _showEditGoalSheet.asStateFlow()
-
-    private val _editGoalId = MutableStateFlow<Int?>(null)
-    val editGoalId = _editGoalId.asStateFlow()
-
-    private val _editGoalModuleName = MutableStateFlow("")
-    val editGoalModuleName = _editGoalModuleName.asStateFlow()
-
-    private val _editGoalExamDateText = MutableStateFlow("")
-    val editGoalExamDateText = _editGoalExamDateText.asStateFlow()
-
-    private val _editGoalTopics = MutableStateFlow<List<String>>(emptyList())
-    val editGoalTopics = _editGoalTopics.asStateFlow()
-
-    private val _editGoalCurrentTopic = MutableStateFlow("")
-    val editGoalCurrentTopic = _editGoalCurrentTopic.asStateFlow()
-
-    private val _isSavingEditGoal = MutableStateFlow(false)
-    val isSavingEditGoal = _isSavingEditGoal.asStateFlow()
+    // ==================== LERNZIEL BEARBEITEN ====================
 
     fun openEditGoalSheet(goal: LearningGoal) {
-        _editGoalId.value = goal.id
-        _editGoalModuleName.value = goal.moduleName
-        _editGoalTopics.value = goal.topics
-
-        _editGoalExamDateText.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && goal.examDate != null) {
-            goal.examDate.format(dateFormatter)
-        } else {
-            ""
-        }
-
-        _editGoalCurrentTopic.value = ""
-        _showEditGoalSheet.value = true
+        _editGoalState.value = EditGoalUiState(
+            showSheet = true,
+            goalId = goal.id,
+            moduleName = goal.moduleName,
+            examDateText = formatGermanDate(goal.examDate),
+            topics = goal.topics,
+            currentTopic = ""
+        )
     }
 
     fun closeEditGoalSheet() {
-        _showEditGoalSheet.value = false
-        _editGoalId.value = null
-        _editGoalModuleName.value = ""
-        _editGoalExamDateText.value = ""
-        _editGoalTopics.value = emptyList()
-        _editGoalCurrentTopic.value = ""
+        _editGoalState.value = EditGoalUiState()
     }
 
     fun onEditGoalModuleNameChange(value: String) {
-        _editGoalModuleName.value = value
+        _editGoalState.update { it.copy(moduleName = value) }
     }
 
     fun onEditGoalExamDateTextChange(value: String) {
-        _editGoalExamDateText.value = value
+        _editGoalState.update { it.copy(examDateText = value) }
     }
 
     fun onEditGoalCurrentTopicChange(value: String) {
-        _editGoalCurrentTopic.value = value
+        _editGoalState.update { it.copy(currentTopic = value) }
     }
 
     fun addEditGoalTopic() {
-        val topicName = _editGoalCurrentTopic.value.trim()
+        val topicName = _editGoalState.value.currentTopic.trim()
         if (topicName.isEmpty()) return
-        if (_editGoalTopics.value.any { it.equals(topicName, ignoreCase = true) }) {
-            _editGoalCurrentTopic.value = ""
+        if (_editGoalState.value.topics.any { it.equals(topicName, ignoreCase = true) }) {
+            _editGoalState.update { it.copy(currentTopic = "") }
             return
         }
-
-        _editGoalTopics.value = _editGoalTopics.value + topicName
-        _editGoalCurrentTopic.value = ""
+        _editGoalState.update { it.copy(topics = it.topics + topicName, currentTopic = "") }
     }
 
     fun removeEditGoalTopic(topicName: String) {
-        _editGoalTopics.value = _editGoalTopics.value - topicName
+        _editGoalState.update { it.copy(topics = it.topics - topicName) }
     }
 
     fun saveEditedLearningGoal() {
         viewModelScope.launch {
-            val goalId = _editGoalId.value ?: return@launch
-            val module = _editGoalModuleName.value.trim()
+            val state = _editGoalState.value
+            val goalId = state.goalId
+            val module = state.moduleName.trim()
             if (module.isEmpty()) return@launch
 
-            _isSavingEditGoal.value = true
+            _editGoalState.update { it.copy(isSaving = true) }
             try {
-                val rawGerman = _editGoalExamDateText.value.trim().ifBlank { null }
-
-                val examDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    rawGerman?.let {
-                        runCatching {
-                            LocalDate.parse(it, dateFormatter)
-                        }.getOrNull()
-                    }
-                } else {
-                    null
-                }
+                val examDate = parseGermanDate(state.examDateText)
 
                 val existingGoal = learningGoalRepository.getGoalById(goalId)
                 if (existingGoal != null) {
                     val updatedGoal = existingGoal.copy(
                         moduleName = module,
-                        topics = _editGoalTopics.value,
+                        topics = state.topics,
                         examDate = examDate
                     )
                     learningGoalRepository.updateGoal(updatedGoal)
@@ -919,18 +711,8 @@ class StudyViewModel(
             } catch (e: Exception) {
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Aktualisierung fehlgeschlagen."))
             } finally {
-                _isSavingEditGoal.value = false
+                _editGoalState.update { it.copy(isSaving = false) }
             }
         }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun requestAddLastSavedToCalendar() {
-        val session = _lastSavedSession.value ?: run {
-            _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Keine Session zum Hinzufügen."))
-            return
-        }
-        val eventData = session.toCalendarEventData()
-        _uiEvents.tryEmit(StudyUiEvent.OpenCalendarInsert(eventData))
     }
 }

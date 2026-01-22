@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.study.components
+package com.example.fitnfocus.ui.goals.study.overview
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -18,21 +18,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.LearningGoal
+import com.example.fitnfocus.ui.goals.study.overview.components.FitNFocusColors
 import java.time.format.DateTimeFormatter
 
 
-// Swipe Background (helles Lila, leicht transparent)
+// Swipe Background
 private val SwipeBackgroundColor = FitNFocusColors.PurpleContainer.copy(alpha = 0.60f)
 private val SwipeIconColor = FitNFocusColors.PurplePrimary
 
-// Timeline Farben (Orange Track + Lila Icon)
+// Timeline Farben
 private val TimelineIconColor = FitNFocusColors.PurplePrimary
 private val TimelineTrackColor = FitNFocusColors.OrangeAccent
 
@@ -46,7 +46,7 @@ private val ItemMinHeight = 92.dp
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LearningGoalsOverview(
+fun GoalsOverviewScreen(
     learningGoals: List<LearningGoal>,
     topicProgress: Map<String, Boolean>,
     onGoalClick: (LearningGoal) -> Unit,
@@ -63,7 +63,6 @@ fun LearningGoalsOverview(
     )
 
     Column(modifier = modifier) {
-        // Header
         Spacer(modifier = Modifier.height(22.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -109,9 +108,6 @@ fun LearningGoalsOverview(
     }
 }
 
-/**
- * Lernziel-Item mit Swipe-to-Delete.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeableGoalItem(
@@ -170,7 +166,6 @@ private fun SwipeableGoalItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Kleiner Pfeil zeigt Swipe-Richtung
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = null,
@@ -207,9 +202,6 @@ private fun SwipeableGoalItem(
     }
 }
 
-/**
- * Timeline-Darstellung eines Lernziels.
- */
 @SuppressLint("NewApi")
 @Composable
 private fun GoalTimelineItem(
@@ -232,17 +224,13 @@ private fun GoalTimelineItem(
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Timeline
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .width(52.dp)
                 .fillMaxHeight()
                 .padding(start = 4.dp)
-            //.background(FitNFocusColors.PurpleContainer.copy(alpha = 0.25f), shape = RoundedCornerShape(12.dp))
-
         ) {
-            // Top connector - Obere Linie
             if (!isFirst) {
                 Surface(
                     color = TimelineTrackColor.copy(alpha = 0.75f),
@@ -251,11 +239,9 @@ private fun GoalTimelineItem(
                         .height(25.dp)
                 ) {}
             } else {
-                // keine Linie
                 Spacer(modifier = Modifier.height(18.dp))
             }
 
-            // Node
             Box(modifier = Modifier.size(34.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
                     progress = { progress },
@@ -272,7 +258,6 @@ private fun GoalTimelineItem(
                 )
             }
 
-            // Bottom connector - untere Linie
             if (!isLast) {
                 Surface(
                     color = TimelineTrackColor.copy(alpha = 0.75f),
@@ -285,14 +270,12 @@ private fun GoalTimelineItem(
             }
         }
 
-        // Content Card
         Card(
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 12.dp, end = 6.dp)
                 .fillMaxHeight(),
             colors = CardDefaults.cardColors(
-
                 containerColor = FitNFocusColors.Surface.copy(alpha = 0.70f)
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -325,7 +308,6 @@ private fun GoalTimelineItem(
                             color = FitNFocusColors.TextSecondary
                         )
                         Text("•", color = FitNFocusColors.TextSecondary)
-
                         Text(
                             text = "${(progress * 100).toInt()}%",
                             style = MaterialTheme.typography.bodySmall,
@@ -335,7 +317,6 @@ private fun GoalTimelineItem(
                     }
                 }
 
-                // Datum-Zeile: Platz IMMER reservieren, damit Höhe identisch bleibt
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val hasDate = goal.examDate != null
                     Icon(
@@ -352,7 +333,7 @@ private fun GoalTimelineItem(
                         } else goal.examDate.toString()
                         "Prüfung: $formatted"
                     } else {
-                        " " // Platzhalter
+                        " "
                     }
 
                     Text(
@@ -366,10 +347,6 @@ private fun GoalTimelineItem(
     }
 }
 
-
-/**
- * Platzhalter für leere Liste.
- */
 @Composable
 private fun EmptyGoalsPlaceholder(onAddClick: () -> Unit) {
     Column(
@@ -397,9 +374,7 @@ private fun EmptyGoalsPlaceholder(onAddClick: () -> Unit) {
             color = FitNFocusColors.TextSecondary.copy(alpha = 0.85f)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        OutlinedButton(
-            onClick = onAddClick
-        ) {
+        OutlinedButton(onClick = onAddClick) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = null,
@@ -410,3 +385,4 @@ private fun EmptyGoalsPlaceholder(onAddClick: () -> Unit) {
         }
     }
 }
+

@@ -13,7 +13,7 @@ import android.content.Context
         LearningGoalEntity::class,
         TopicProgressEntity::class
     ],
-    version = 6,  // Erhöht wegen elapsedSeconds Feld in StudySessionEntity
+    version = 7,  // Erhöht: date/examDate/completedAt → epochDay (Long statt String)
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -34,7 +34,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "fitnfocus_database"
                 )
-                    .fallbackToDestructiveMigration(dropAllTables = true) // Für Entwicklungsphase - löscht DB bei Schema-Änderung
+                    .fallbackToDestructiveMigration(dropAllTables = true) // Für Entwicklungsphase: löscht DB bei Schema-Änderung
                     .build()
                 INSTANCE = instance
                 instance

@@ -20,16 +20,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -37,15 +33,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,9 +53,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.viewmodel.HomeViewModel
-import com.example.fitnfocus.viewmodel.TodayLearningItem
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.ui.text.style.TextOverflow
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -74,14 +67,12 @@ fun HomeScreen(
     onStartSession: (Int) -> Unit = {},  // Startet Session direkt mit Timer (sessionId)
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val focusMinutes by viewModel.todayFocusMinutes.collectAsState()
-    val totalPlannedMinutes by viewModel.totalPlannedMinutes.collectAsState()
-
-    // "Sessions heute" (alle Sessions: geplant, in Bearbeitung, abgeschlossen)
-    val todayLearningItems by viewModel.todayLearningItems.collectAsState()
-
-    // Abgeschlossene Themen heute
-    val todayCompletedTopics by viewModel.todayCompletedTopics.collectAsState()
+    // Reaktiver Dashboard-State (keine manuelle Load-Logik mehr nötig)
+    val dashboardState by viewModel.dashboardState.collectAsState()
+    val focusMinutes = dashboardState.todayFocusMinutes
+    val totalPlannedMinutes = dashboardState.totalPlannedMinutes
+    val todayLearningItems = dashboardState.todayLearningItems
+    val todayCompletedTopics = dashboardState.todayCompletedTopics
 
     // Ausgewählte Session für Bearbeitung
     val selectedSessionForEdit by viewModel.selectedSessionForEdit.collectAsState()
@@ -89,27 +80,12 @@ fun HomeScreen(
     // Dialog-State für Reset-Bestätigung
     var showResetDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadTodayDashboard()
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                // Wichtig: Damit Material nicht automatisch StatusBar-Padding addiert,
-                // kannst du hier entweder WindowInsets(0) setzen oder statusBars nur teilweise nutzen.
-                // Variante A (kein extra top inset):
                 windowInsets = WindowInsets(0, 0, 0, 0),
-                // Variante B (wenn du safe-area willst, aber weniger "Luft" als dein Screenshot):
-                // windowInsets = WindowInsets.statusBars.only(WindowInsetsSides.Top),
-
                 title = {
-                    // Logo links
-                    /*Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "FitNFocus Logo",
-                        modifier = Modifier.height(70.dp),
-                    )*/
                     Row{
                         Text(text = "Hallo Eugenia")
                     }
@@ -139,7 +115,6 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             Spacer(modifier = Modifier.height(4.dp))
             // ----- DASHBOARD HEADER -----
             Text(
@@ -147,7 +122,6 @@ fun HomeScreen(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-
 
             // Focus Card - zeigt gelernte Minuten
             ElevatedCard(
@@ -181,7 +155,6 @@ fun HomeScreen(
                     )
                 }
             }
-
 
             // ----- SESSIONS HEUTE -----
             Spacer(modifier = Modifier.height(1.dp))
@@ -312,10 +285,18 @@ private fun InteractiveTodayLearningCard(
             // Thema und Status
             Column(modifier = Modifier.weight(1f)) {
                 Text(
+                    text = item.moduleName,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
                     text = item.topic,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 // Status-Badge
@@ -394,7 +375,7 @@ private fun InteractiveTodayLearningCard(
                         )
                     ) {
                         Icon(
-                            Icons.Default.Pause,
+                            Icons.Default.PlayArrow,
                             contentDescription = "Pause",
                             modifier = Modifier.size(20.dp)
                         )
@@ -410,7 +391,7 @@ private fun InteractiveTodayLearningCard(
                         )
                     ) {
                         Icon(
-                            Icons.Default.PlayArrow,
+                            Icons.Default.Pause,
                             contentDescription = "Fortsetzen",
                             modifier = Modifier.size(20.dp)
                         )

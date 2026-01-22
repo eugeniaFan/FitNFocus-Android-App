@@ -17,7 +17,7 @@ interface TopicProgressDao {
     /**
      * Alle Fortschritte als Flow.
      */
-    @Query("SELECT * FROM topic_progress ORDER BY completedAt DESC")
+    @Query("SELECT * FROM topic_progress ORDER BY completedAtEpochDay DESC")
     fun getAllProgress(): Flow<List<TopicProgressEntity>>
 
     /**
@@ -53,17 +53,18 @@ interface TopicProgressDao {
     /**
      * Alle abgeschlossenen Topics (für Sammelfiguren-Feature).
      */
-    @Query("SELECT * FROM topic_progress WHERE isCompleted = 1 ORDER BY completedAt DESC")
+    @Query("SELECT * FROM topic_progress WHERE isCompleted = 1 ORDER BY completedAtEpochDay DESC")
     fun getAllCompletedTopics(): Flow<List<TopicProgressEntity>>
 
     /**
-     * Abgeschlossene Topics an einem bestimmten Datum.
+     * Abgeschlossene Topics an einem bestimmten Datum (epochDay).
      */
-    @Query("SELECT * FROM topic_progress WHERE completedAt = :date AND isCompleted = 1")
-    suspend fun getCompletedTopicsByDate(date: String): List<TopicProgressEntity>
+    @Query("SELECT * FROM topic_progress WHERE completedAtEpochDay = :epochDay AND isCompleted = 1")
+    suspend fun getCompletedTopicsByEpochDay(epochDay: Long): List<TopicProgressEntity>
 
     /**
-     * Fügt einen neuen Fortschritt ein oder ersetzt existierenden.
+     * Fügt einen neuen Fortschritt ein.
+     * REPLACE erlaubt hier Upsert-Verhalten (unique index auf topicName+goalId).
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProgress(progress: TopicProgressEntity): Long
@@ -89,7 +90,6 @@ interface TopicProgressDao {
     /**
      * Setzt den Abschluss-Status für ein Topic.
      */
-    @Query("UPDATE topic_progress SET isCompleted = :isCompleted, completedAt = :completedAt WHERE goalId = :goalId AND topicName = :topicName")
-    suspend fun updateCompletionStatus(goalId: Int, topicName: String, isCompleted: Boolean, completedAt: String?)
+    @Query("UPDATE topic_progress SET isCompleted = :isCompleted, completedAtEpochDay = :completedAtEpochDay WHERE goalId = :goalId AND topicName = :topicName")
+    suspend fun updateCompletionStatus(goalId: Int, topicName: String, isCompleted: Boolean, completedAtEpochDay: Long?)
 }
-

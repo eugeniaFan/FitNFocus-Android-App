@@ -6,8 +6,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Entity für den Fortschritt eines Topics.
- * Unabhängig von Sessions - speichert den Abschluss-Status eines Topics.
+ * Room entity for topic progress tracking.
+ * Tracks completion status of individual topics independent of sessions.
  */
 @Entity(
     tableName = "topic_progress",
@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
             entity = LearningGoalEntity::class,
             parentColumns = ["id"],
             childColumns = ["goalId"],
-            onDelete = ForeignKey.CASCADE //Automatisches Löschen wenn Goal gelöscht wird
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
@@ -26,9 +26,9 @@ import androidx.room.PrimaryKey
 )
 data class TopicProgressEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val goalId: Int,                       // FK zu LearningGoal
-    val topicName: String,                 // Name des Topics
-    val isCompleted: Boolean = false,      // Abgeschlossen ja/nein
-    val completedAtEpochDay: Long? = null  // Datum des Abschlusses als epochDay
+    val goalId: Int,
+    val topicName: String,
+    val isCompleted: Boolean = false,
+    val completedAtEpochDay: Long? = null
 )
 

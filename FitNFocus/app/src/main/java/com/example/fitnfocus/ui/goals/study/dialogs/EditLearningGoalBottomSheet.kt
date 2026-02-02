@@ -1,7 +1,5 @@
 package com.example.fitnfocus.ui.goals.study.dialogs
 
-import android.annotation.SuppressLint
-import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -48,7 +47,6 @@ import java.time.format.DateTimeFormatter
  * BottomSheet zum Bearbeiten eines bestehenden Lernziels.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("NewApi")
 @Composable
 fun EditLearningGoalBottomSheet(
     moduleName: String,
@@ -73,6 +71,7 @@ fun EditLearningGoalBottomSheet(
     ) {
         Column(
             modifier = Modifier
+                .testTag("goals_edit_goal_sheet")
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
@@ -89,7 +88,9 @@ fun EditLearningGoalBottomSheet(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                IconButton(onClick = onDismiss) {
+                IconButton(
+                    onClick = onDismiss
+                ) {
                     Icon(Icons.Default.Close, contentDescription = "Schließen")
                 }
             }
@@ -98,7 +99,9 @@ fun EditLearningGoalBottomSheet(
                 value = moduleName,
                 onValueChange = onModuleNameChange,
                 label = { Text("Modul / Fach") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .testTag("edit_goal_input_module")
+                    .fillMaxWidth(),
                 singleLine = true
             )
 
@@ -107,32 +110,31 @@ fun EditLearningGoalBottomSheet(
                 onValueChange = onExamDateTextChange,
                 label = { Text("Prüfungsdatum") },
                 placeholder = { Text("TT.MM.JJJJ") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .testTag("edit_goal_input_exam_date")
+                    .fillMaxWidth(),
                 singleLine = true,
                 trailingIcon = {
                     IconButton(
-                        onClick = {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                showDatePicker.value = true
-                            }
-                        }
+                        onClick = { showDatePicker.value = true }
                     ) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Datum wählen")
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = "Datum wählen"
+                        )
                     }
                 },
                 supportingText = {
                     Text(
-                        text = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            "Optional. Du kannst tippen oder über das Kalender-Icon wählen."
-                        } else {
-                            "Optional. Datumsauswahl benötigt Android 8.0+ (API 26)."
-                        },
+                        text = "Du kannst tippen oder über das Kalender-Icon wählen.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
             Text(
                 text = "Themen",
                 style = MaterialTheme.typography.titleMedium,
@@ -143,7 +145,9 @@ fun EditLearningGoalBottomSheet(
                 value = currentTopic,
                 onValueChange = onCurrentTopicChange,
                 label = { Text("Neues Thema") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .testTag("edit_goal_input_topic")
+                    .fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onAddTopic() })
@@ -153,7 +157,11 @@ fun EditLearningGoalBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                OutlinedButton(onClick = onAddTopic, enabled = currentTopic.trim().isNotEmpty()) {
+                OutlinedButton(
+                    modifier = Modifier.testTag("edit_goal_add_topic_button"),
+                    onClick = onAddTopic,
+                    enabled = currentTopic.trim().isNotEmpty()
+                ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.height(0.dp))
                     Text("Thema hinzufügen")
@@ -191,7 +199,9 @@ fun EditLearningGoalBottomSheet(
 
             Button(
                 onClick = onSave,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .testTag("edit_goal_save_button")
+                    .fillMaxWidth(),
                 enabled = moduleName.trim().isNotEmpty() && !isSaving
             ) {
                 Text(if (isSaving) "Speichere…" else "Änderungen speichern")
@@ -201,7 +211,9 @@ fun EditLearningGoalBottomSheet(
         }
     }
 
-    if (showDatePicker.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    // TODO Überprüfen diese Datum Prüfung mit dem Formater richtig ist?
+    //  Ob es nicht eine bestehenede Funktion gibt die verwendet werden kann
+    if (showDatePicker.value) {
         val pickerState = rememberDatePickerState()
         DatePickerDialog(
             onDismissRequest = { showDatePicker.value = false },

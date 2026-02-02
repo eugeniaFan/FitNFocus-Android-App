@@ -1,7 +1,5 @@
 package com.example.fitnfocus.viewmodel
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnfocus.data.repository.LearningGoalRepository
@@ -16,25 +14,17 @@ import com.example.fitnfocus.domain.TopicProgress
 import com.example.fitnfocus.ui.home.CompletedTopicItem
 import com.example.fitnfocus.ui.home.DashboardState
 import com.example.fitnfocus.ui.home.TodayLearningItem
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * ViewModel für den HomeScreen / Dashboard.
- *
- * Verantwortlich für:
- * - Bereitstellung von UI-State für das Dashboard
- * - Verarbeitung von User-Aktionen (Session-Updates, Topic-Completion)
- *
- * State wird rein reaktiv aus Repository-Flows abgeleitet.
+ * ViewModel for home screen dashboard.
+ * Provides dashboard UI state and handles user actions for sessions and topics.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 class HomeViewModel(
     private val sessionRepository: SessionRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
@@ -42,20 +32,18 @@ class HomeViewModel(
     private val topicProgressRepository: TopicProgressRepository
 ) : ViewModel() {
 
-    private val _selectedSessionForEdit = MutableStateFlow<TodayLearningItem?>(null)
 
-    // ==================== PUBLIC STATE FLOWS ====================
-
+    // Public state flows
     val user: StateFlow<User> = userPreferencesRepository.userFlow
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = User()
         )
-    val selectedSessionForEdit: StateFlow<TodayLearningItem?> = _selectedSessionForEdit.asStateFlow()
+
 
     /**
-     * Dashboard-State: Kombiniert Sessions, Goals und TopicProgress reaktiv.
+     * Dashboard state combining sessions, goals, and topic progress.
      */
     val dashboardState: StateFlow<DashboardState> = combine(
         sessionRepository.getAllSessions(),
@@ -69,34 +57,6 @@ class HomeViewModel(
         initialValue = DashboardState()
     )
 
-    /**
-     * Schritte heute - aus ActivityRepository geladen. (Nicht in Nutzung)
-     */
-
-    // ==================== PUBLIC EVENT FUNCTIONS ====================
-
-    fun selectSessionForEdit(item: TodayLearningItem?) {
-        _selectedSessionForEdit.value = item
-    }
-
-    fun updateSessionStatus(sessionId: Int, status: SessionStatus) {
-        viewModelScope.launch {
-            sessionRepository.updateSessionStatus(sessionId, status)
-        }
-    }
-
-    fun updateSessionNotes(sessionId: Int, notes: String) {
-        viewModelScope.launch {
-            sessionRepository.updateSessionNotes(sessionId, notes)
-        }
-    }
-
-    fun markTopicCompleted(goalId: Int?, topic: String, isCompleted: Boolean) {
-        if (goalId == null) return
-        viewModelScope.launch {
-            topicProgressRepository.markTopicCompleted(goalId, topic, isCompleted)
-        }
-    }
 
     fun resetOnboarding() {
         viewModelScope.launch {
@@ -111,20 +71,16 @@ class HomeViewModel(
     ): DashboardState {
         val today = LocalDate.now()
 
-        // Sessions für Dashboard: nur Sessions von heute (egal Status)
         val todaySessions = allSessions
-            .filter { it.date == today && it.goalId != null}
+            .filter { it.date == today && it.goalId != null }
             .distinctBy { it.id }
 
-        // Nenner: alle Minuten der heutigen Sessions (egal Status)
         val totalPlannedMinutesToday = todaySessions.sumOf { it.durationMinutes }
 
-        // Zähler: nur Minuten der heute COMPLETED Sessions
         val todayCompletedMinutes = todaySessions
             .filter { it.status == SessionStatus.COMPLETED }
             .sumOf { it.durationMinutes }
 
-        // Completed Topics Set für schnellen Lookup
         val completedTopicKeys: Set<Pair<Int, String>> = completedTopics
             .asSequence()
             .filter { it.isCompleted }
@@ -140,7 +96,6 @@ class HomeViewModel(
             .map { it.topicName }
             .toSet()
 
-        // UI-Liste für heute
         val learningItems = todaySessions.map { session ->
             val goalForSession = session.goalId?.let { gid ->
                 goals.firstOrNull { it.id == gid }
@@ -167,6 +122,7 @@ class HomeViewModel(
                 moduleName = resolvedGoal?.moduleName ?: "Lernen",
                 topic = session.topic,
                 durationMinutes = session.durationMinutes,
+                elapsedSeconds = session.elapsedSeconds,
                 status = session.status,
                 notes = session.notes,
                 isTopicCompleted = isCompletedForItem
@@ -175,14 +131,12 @@ class HomeViewModel(
             compareBy<TodayLearningItem> { item ->
                 when (item.status) {
                     SessionStatus.PLANNED -> 0
-                    SessionStatus.IN_PROGRESS -> 1
-                    SessionStatus.STOPPED -> 2
-                    SessionStatus.COMPLETED -> 3
+                    SessionStatus.STOPPED -> 1
+                    SessionStatus.COMPLETED -> 2
                 }
             }.thenByDescending { it.sessionId }
         )
 
-        // Heute abgeschlossene Topics
         val todayCompletedItems = completedTopics
             .filter { it.isCompleted && it.completedAt == today }
             .map { progress ->

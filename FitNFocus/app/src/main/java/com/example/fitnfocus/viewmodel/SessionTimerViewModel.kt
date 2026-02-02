@@ -1,9 +1,8 @@
 package com.example.fitnfocus.viewmodel
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fitnfocus.data.repository.LearningGoalRepository
 import com.example.fitnfocus.data.repository.SessionRepository
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.domain.usecase.SetTopicCompletionUseCase
@@ -17,23 +16,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel für den Session-Timer.
+ * ViewModel for the session timer.
  *
- * Verantwortlichkeiten:
- * - Timer-Logik (Start, Pause, Stop, Tick-Loop)
- * - Dialog-State Management
- * - Notizen-Text verwalten
- * - Persistente Updates (elapsedSeconds, status, notes)
+ * Responsibilities:
+ * - Timer lifecycle (start, pause, stop, tick loop)
+ * - Dialog state and notes editing
+ * - Persisting session status, time, and notes
  *
- * NICHT zuständig für:
- * - Focus-Übersicht
- * - Navigation-Status
- * - Welche Session als nächstes kommt
-
+ * Out of scope:
+ * - Focus overview
+ * - Navigation state
+ * - Picking the next session
  */
-@RequiresApi(Build.VERSION_CODES.O)
 class SessionTimerViewModel(
     private val sessionRepository: SessionRepository,
+    private val learningGoalRepository: LearningGoalRepository,
     private val setTopicCompletionUseCase: SetTopicCompletionUseCase
 ) : ViewModel() {
 
@@ -43,8 +40,8 @@ class SessionTimerViewModel(
     private var timerJob: Job? = null
 
     /**
-     * Initialisiert den Timer mit Session-Daten.
-     * Wird von FocusScreen aufgerufen wenn eine Session gestartet wird.
+     * Initializes timer with session data.
+     * Called from FocusScreen when a session is started.
      */
     fun initializeSession(
         sessionId: Int,
@@ -68,7 +65,30 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Startet den Timer.
+     * Loads a session from storage and initializes the timer state.
+     * Called from SessionTimerRoute.
+     */
+    fun loadAndInitializeSession(sessionId: Int) {
+        viewModelScope.launch {
+            val session = sessionRepository.getSessionById(sessionId)
+            session?.let {
+                val moduleName = it.goalId?.let { goalId ->
+                    learningGoalRepository.getGoalById(goalId)?.moduleName
+                } ?: "Lernen"
+
+                initializeSession(
+                    sessionId = it.id,
+                    sessionTopic = it.topic,
+                    moduleName = moduleName,
+                    durationMinutes = it.durationMinutes,
+                    goalId = it.goalId
+                )
+            }
+        }
+    }
+
+    /**
+     * Starts the timer.
      */
     fun startTimer() {
         _uiState.update { it.copy(timerState = TimerState.RUNNING) }
@@ -76,7 +96,7 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Pausiert den Timer.
+     * Pauses the timer.
      */
     fun pauseTimer() {
         timerJob?.cancel()
@@ -84,7 +104,7 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Setzt den Timer fort nach Pause.
+     * Resumes the timer after a pause.
      */
     fun resumeTimer() {
         _uiState.update { it.copy(timerState = TimerState.RUNNING) }
@@ -92,8 +112,7 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Stoppt den Timer vorzeitig.
-     * Zeigt den "Partial Completion" Dialog.
+     * Stops the timer early and shows the partial completion dialog.
      */
     fun stopTimer() {
         timerJob?.cancel()
@@ -106,31 +125,24 @@ class SessionTimerViewModel(
     }
 
     /**
-     * User bestätigt "Partial Completion" im Dialog.
-     * Speichert elapsedSeconds und setzt Status auf STOPPED.
-     * @param onComplete Callback der aufgerufen wird wenn die DB-Operation abgeschlossen ist
+     * Confirms partial completion and persists elapsed time, status, and notes.
      */
     fun confirmPartialSave(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             val state = _uiState.value
             try {
-                // elapsedSeconds in DB speichern
                 sessionRepository.updateElapsedSeconds(state.sessionId, state.elapsedSeconds)
-
-                // Status auf STOPPED setzen
                 sessionRepository.updateSessionStatus(state.sessionId, SessionStatus.STOPPED)
 
-                // Notizen anhängen wenn vorhanden (nicht überschreiben!)
+                // Append notes without overwriting existing ones.
                 if (state.sessionNotes.isNotBlank()) {
                     sessionRepository.appendSessionNotes(state.sessionId, state.sessionNotes)
                 }
 
-                // Dialog schließen (FocusScreen reagiert auf timerState change)
                 _uiState.update {
                     it.copy(showSavePartialDialog = false)
                 }
 
-                // Callback aufrufen nachdem alles gespeichert wurde
                 onComplete()
             } catch (e: Exception) {
                 _uiState.update {
@@ -141,9 +153,7 @@ class SessionTimerViewModel(
     }
 
     /**
-     * User lehnt "Partial Completion" ab.
-     * Session wird nicht gespeichert, Timer wird zurückgesetzt.
-     * @param onDismissed Callback der aufgerufen wird nachdem der State zurückgesetzt wurde
+     * Cancels partial completion and resets the timer state.
      */
     fun dismissPartialSave(onDismissed: () -> Unit = {}) {
         timerJob?.cancel()
@@ -152,7 +162,7 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Bricht den Timer komplett ab (ohne Speichern).
+     * Aborts the timer without saving.
      */
     fun cancelTimer() {
         timerJob?.cancel()
@@ -160,8 +170,7 @@ class SessionTimerViewModel(
     }
 
     /**
-     * Timer ist bei 0 angekommen (FINISHED).
-     * Zeigt die Completion Card.
+     * Handles timer completion and shows the completion card.
      */
     private fun onTimerFinished() {
         _uiState.update {
@@ -173,37 +182,26 @@ class SessionTimerViewModel(
     }
 
     /**
-     * User schließt Session ab (nach FINISHED).
-     * Speichert als COMPLETED mit optional: Notizen, Topic-Completion.
-     * @param onComplete Callback der aufgerufen wird wenn die DB-Operation abgeschlossen ist
+     * Completes the session and optionally marks the topic as done.
      */
     fun completeSession(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             val state = _uiState.value
             try {
-                // Session-Status auf COMPLETED setzen
                 sessionRepository.updateSessionStatus(state.sessionId, SessionStatus.COMPLETED)
-
-                // elapsedSeconds = totalSeconds (vollständig)
                 sessionRepository.updateElapsedSeconds(state.sessionId, state.totalSeconds)
 
-                // Notizen anhängen wenn vorhanden (nicht überschreiben!)
+                // Append notes without overwriting existing ones.
                 if (state.sessionNotes.isNotBlank()) {
                     sessionRepository.appendSessionNotes(state.sessionId, state.sessionNotes)
                 }
 
-                // Optional: Topic als abgeschlossen markieren via UseCase (Single Source of Truth)
                 if (state.markTopicAsCompleted && state.goalId != null && state.goalId > 0) {
-                    // UseCase kümmert sich um:
-                    // 1. TopicProgress markieren
-                    // 2. Alle offenen Sessions für dieses Topic abschließen
+                    // Use case keeps topic progress and sessions consistent.
                     setTopicCompletionUseCase(state.goalId, state.sessionTopic, true)
                 }
 
-                // State zurücksetzen
                 _uiState.update { SessionTimerUiState() }
-
-                // Callback aufrufen nachdem alles gespeichert wurde
                 onComplete()
             } catch (e: Exception) {
                 _uiState.update {
@@ -213,30 +211,16 @@ class SessionTimerViewModel(
         }
     }
 
-    /**
-     * Aktualisiert Notizen-Text.
-     */
     fun updateNotes(notes: String) {
         _uiState.update { it.copy(sessionNotes = notes) }
     }
 
-    /**
-     * Aktualisiert "Topic abgeschlossen" Checkbox.
-     */
     fun updateMarkTopicCompleted(isCompleted: Boolean) {
         _uiState.update { it.copy(markTopicAsCompleted = isCompleted) }
     }
 
     /**
-     * Löscht Fehlermeldung.
-     */
-    fun clearError() {
-        _uiState.update { it.copy(errorMessage = null) }
-    }
-
-    /**
-     * Tick-Loop für den Timer.
-     * Läuft in einer Coroutine und decrementiert remainingSeconds jede Sekunde.
+     * Tick loop for the timer running in coroutine.
      */
     private fun startTickLoop() {
         timerJob?.cancel()
@@ -249,16 +233,12 @@ class SessionTimerViewModel(
                     }
                 }
             }
-            // Timer bei 0 angekommen
             if (_uiState.value.remainingSeconds <= 0) {
                 onTimerFinished()
             }
         }
     }
 
-    /**
-     * Cleanup bei ViewModel-Destroy.
-     */
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()

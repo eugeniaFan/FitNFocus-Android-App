@@ -1,7 +1,5 @@
 package com.example.fitnfocus.ui.onboarding.steps
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -22,9 +20,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * Step 2: Modul und Lernziel eingeben
+ * Step 2: capture the first learning goal details.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ModuleStep(
     moduleName: String,
@@ -61,7 +58,6 @@ fun ModuleStep(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Modulname
         OutlinedTextField(
             value = moduleName,
             onValueChange = onModuleNameChanged,
@@ -73,7 +69,6 @@ fun ModuleStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Themen-Eingabe
         Text(text = "Themen (optional)", style = MaterialTheme.typography.labelLarge)
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -98,7 +93,6 @@ fun ModuleStep(
             }
         }
 
-        // Topic Chips
         if (topics.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             topics.forEach { topic ->
@@ -111,7 +105,11 @@ fun ModuleStep(
                             onClick = { onRemoveTopic(topic) },
                             modifier = Modifier.size(18.dp)
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Entfernen", modifier = Modifier.size(14.dp))
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Entfernen",
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
                     },
                     modifier = Modifier.padding(vertical = 4.dp)
@@ -121,7 +119,6 @@ fun ModuleStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Prüfungstermin
         Text(text = "Prüfungstermin (optional)", style = MaterialTheme.typography.labelLarge)
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -152,7 +149,6 @@ fun ModuleStep(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModuleDatePickerDialog(

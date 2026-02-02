@@ -2,6 +2,8 @@ package com.example.fitnfocus.ui.onboarding
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -10,10 +12,6 @@ import com.example.fitnfocus.ui.onboarding.components.OnboardingProgressIndicato
 import com.example.fitnfocus.ui.onboarding.components.OnboardingTopBar
 import com.example.fitnfocus.ui.onboarding.steps.*
 
-/**
- * Hauptbildschirm für das Onboarding.
- * Koordiniert die einzelnen Steps und die Navigation.
- */
 @Composable
 fun OnboardingScreen(
     uiState: OnboardingUiState,
@@ -25,7 +23,6 @@ fun OnboardingScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header: Step-Anzeige + Skip
         OnboardingTopBar(
             currentStep = uiState.currentStep,
             totalSteps = uiState.totalSteps,
@@ -34,7 +31,6 @@ fun OnboardingScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Fortschrittsbalken
         OnboardingProgressIndicator(
             currentStep = uiState.currentStep,
             totalSteps = uiState.totalSteps
@@ -42,7 +38,6 @@ fun OnboardingScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Hauptinhalt - animierter Wechsel zwischen Steps
         AnimatedContent(
             targetState = uiState.currentStep,
             modifier = Modifier.weight(1f),
@@ -51,7 +46,6 @@ fun OnboardingScreen(
             OnboardingStepContent(step = step, uiState = uiState, onEvent = onEvent)
         }
 
-        // Footer: Navigation Buttons
         OnboardingNavigationButtons(
             currentStep = uiState.currentStep,
             totalSteps = uiState.totalSteps,
@@ -60,12 +54,17 @@ fun OnboardingScreen(
             onNext = { onEvent(OnboardingEvent.NextStep) },
             onComplete = { onEvent(OnboardingEvent.Complete) }
         )
+
+        uiState.errorMessage?.let { message ->
+            Snackbar(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(text = message)
+            }
+        }
     }
 }
 
-/**
- * Rendert den Inhalt für den aktuellen Step.
- */
 @Composable
 private fun OnboardingStepContent(
     step: Int,
@@ -109,4 +108,3 @@ private fun OnboardingStepContent(
         5 -> SummaryStep(uiState = uiState)
     }
 }
-

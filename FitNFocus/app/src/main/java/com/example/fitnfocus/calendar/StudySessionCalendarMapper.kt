@@ -1,7 +1,5 @@
 package com.example.fitnfocus.calendar
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.fitnfocus.domain.CalendarEventData
 import com.example.fitnfocus.domain.StudySession
 import java.time.LocalDateTime
@@ -9,13 +7,9 @@ import java.time.LocalTime
 import java.time.ZoneId
 
 /**
- * Mapping von StudySession (Domain) -> CalendarEventData (für CalendarExporter).
- *
- * Hinweis zur Semantik:
- * - startTime: Uhrzeit am Tag der Session
- * - endTime ergibt sich aus durationMinutes
+ * Mapper from StudySession to CalendarEventData.
+ * Converts domain session to calendar event format with time and duration.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 fun StudySession.toCalendarEventData(
     startTime: LocalTime,
     zoneId: ZoneId = ZoneId.systemDefault(),
@@ -37,14 +31,11 @@ fun StudySession.toCalendarEventData(
 }
 
 /**
- * Convenience-Overload: Startzeit ist "jetzt".
- * Export startet sofort.
+ * Convenience overload using current local time as start time.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 fun StudySession.toCalendarEventDataNow(
     zoneId: ZoneId = ZoneId.systemDefault()
 ): CalendarEventData = toCalendarEventData(
-    startTime = LocalTime.now(),
-    zoneId = zoneId
+    startTime = LocalTime.now(), zoneId = zoneId
 )
 

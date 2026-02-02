@@ -6,8 +6,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Entity für eine Lernsession.
- * Eine Session(Event) ist eine Lerneinheit für ein bestimmtes Topic (Thema).
+ * Room entity for study sessions.
+ * Represents concrete learning events for specific topics with optional goal association.
  */
 @Entity(
     tableName = "study_session",
@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
             entity = LearningGoalEntity::class,
             parentColumns = ["id"],
             childColumns = ["goalId"],
-            onDelete = ForeignKey.SET_NULL  // Session bleibt, aber goalId wird null
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
@@ -27,11 +27,11 @@ import androidx.room.PrimaryKey
 )
 data class StudySessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val topic: String,                 // Das Thema der Session
-    val durationMinutes: Int,          // Dauer der Session in Minuten
-    val epochDay: Long,                // Datum als epochDay (Tage seit 1970-01-01)
-    val goalId: Int? = null,           // FK zu LearningGoal (nullable!)
-    val status: String = "PLANNED",    // PLANNED, IN_PROGRESS, STOPPED, COMPLETED
-    val notes: String = "",            // Notizen/ Todos
-    val elapsedSeconds: Int = 0        // Tatsächlich fokussierte Zeit (für Partial Completion)
+    val topic: String,
+    val durationMinutes: Int,
+    val epochDay: Long,
+    val goalId: Int? = null,
+    val status: String = "PLANNED",
+    val notes: String = "",
+    val elapsedSeconds: Int = 0
 )

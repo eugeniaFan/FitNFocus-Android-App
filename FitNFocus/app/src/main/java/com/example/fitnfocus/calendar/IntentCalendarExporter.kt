@@ -4,6 +4,10 @@ import android.content.Intent
 import android.provider.CalendarContract
 import com.example.fitnfocus.domain.CalendarEventData
 
+/**
+ * Calendar exporter implementation using Android intents.
+ * Integrates with system calendar app via ACTION_INSERT intent.
+ */
 class IntentCalendarExporter : CalendarExporter {
     override fun buildInsertIntent(event: CalendarEventData): Intent {
         return Intent(Intent.ACTION_INSERT).apply {

@@ -22,17 +22,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.LearningGoal
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.domain.StudySession
 import com.example.fitnfocus.ui.goals.study.sessions.util.formatDateHeader
-import com.example.fitnfocus.ui.goals.study.overview.components.FitNFocusColors
+import com.example.fitnfocus.ui.theme.PurplePrimary
 import com.example.fitnfocus.ui.goals.study.sessions.components.EnhancedSessionCard
 import kotlin.collections.component1
 import kotlin.collections.component2
-
 
 /**
  * Sessions für ein bestimmtes Topic mit Datumsgruppierung.
@@ -57,14 +57,19 @@ fun TopicSessionsScreen(
     val sessionsByDate = sessions.groupBy { it.date }
 
     Spacer(modifier = Modifier.height(28.dp))
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.testTag("screen_topic_sessions")
+    ) {
         // Header
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(bottom = 1.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick
+            ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Zurück"
@@ -88,6 +93,7 @@ fun TopicSessionsScreen(
             }
 
             IconButton(
+                modifier = Modifier.testTag("add_session_button"),
                 onClick = onAddClick,
                 enabled = !isTopicCompleted
             ) {
@@ -97,7 +103,7 @@ fun TopicSessionsScreen(
                     tint = if (isTopicCompleted)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     else
-                        FitNFocusColors.PurplePrimary
+                        PurplePrimary
                 )
             }
         }
@@ -136,10 +142,10 @@ fun TopicSessionsScreen(
             style = MaterialTheme.typography.titleMedium
         )
 
-//        Spacer(modifier = Modifier.height(8.dp))
-
         if (isLoading) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         if (sessions.isEmpty()) {
@@ -169,9 +175,20 @@ fun TopicSessionsScreen(
                         EnhancedSessionCard(
                             session = session,
                             onClick = { onSessionClick(session) },
-                            onStatusChange = { newStatus -> onUpdateSessionStatus(session.id, newStatus) },
+                            onStatusChange = { newStatus ->
+                                onUpdateSessionStatus(
+                                    session.id,
+                                    newStatus
+                                )
+                            },
                             onNotesChange = { notes -> onUpdateSessionNotes(session.id, notes) },
-                            onMarkTopicCompleted = { isCompleted -> onMarkTopicCompleted(goal.id, topic, isCompleted) },
+                            onMarkTopicCompleted = { isCompleted ->
+                                onMarkTopicCompleted(
+                                    goal.id,
+                                    topic,
+                                    isCompleted
+                                )
+                            },
                             showTopicCompletionButton = !isTopicCompleted
                         )
                     }

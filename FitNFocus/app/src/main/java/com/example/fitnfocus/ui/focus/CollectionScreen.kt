@@ -89,8 +89,16 @@ private fun CollectionTypeCard(type: FocusTypeUi) {
         )
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(type.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(type.subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                type.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                type.subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Text(type.description, style = MaterialTheme.typography.bodySmall)
         }
     }

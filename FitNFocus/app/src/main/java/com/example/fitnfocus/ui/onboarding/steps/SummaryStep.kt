@@ -1,6 +1,5 @@
 package com.example.fitnfocus.ui.onboarding.steps
 
-import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +17,7 @@ import com.example.fitnfocus.ui.onboarding.OnboardingUiState
 import java.time.format.DateTimeFormatter
 
 /**
- * Step 5: Zusammenfassung vor dem Abschluss
+ * Step 5: review the collected onboarding input before completion.
  */
 @Composable
 fun SummaryStep(
@@ -72,11 +71,7 @@ fun SummaryStep(
                         SummaryRow("Themen", uiState.topics.joinToString(", "))
                     }
                     uiState.examDate?.let { date ->
-                        val formattedDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                        } else {
-                            date.toString()
-                        }
+                        val formattedDate = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
                         SummaryRow("Prüfung", formattedDate)
                     }
                 }
@@ -128,7 +123,15 @@ private fun SummaryRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

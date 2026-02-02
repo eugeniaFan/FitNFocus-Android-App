@@ -1,9 +1,6 @@
 package com.example.fitnfocus.ui.home
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,41 +49,33 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.domain.SessionStatus
+import com.example.fitnfocus.ui.common.toPresentation
 import com.example.fitnfocus.viewmodel.HomeViewModel
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 
-
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToFocus: () -> Unit = {},  // Navigiert zum Focus-Tab
-    onStartSession: (Int) -> Unit = {},  // Startet Session direkt mit Timer (sessionId)
+    onStartSession: (Int) -> Unit = {},
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    // Reaktiver Dashboard-State (keine manuelle Load-Logik mehr nötig)
     val dashboardState by viewModel.dashboardState.collectAsState()
     val focusMinutes = dashboardState.todayFocusMinutes
     val totalPlannedMinutes = dashboardState.totalPlannedMinutes
     val todayLearningItems = dashboardState.todayLearningItems
-    val todayCompletedTopics = dashboardState.todayCompletedTopics
 
-    // Ausgewählte Session für Bearbeitung
-    val selectedSessionForEdit by viewModel.selectedSessionForEdit.collectAsState()
-
-    // Dialog-State für Reset-Bestätigung
     var showResetDialog by remember { mutableStateOf(false) }
-
 
     Scaffold(
         topBar = {
             TopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
-                    Row{
+                    Row {
                         Text(text = "Hallo Eugenia")
                     }
                 },
@@ -116,14 +105,12 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Spacer(modifier = Modifier.height(4.dp))
-            // ----- DASHBOARD HEADER -----
             Text(
                 text = "Bereit für eine fokussierte Session?",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
-            // Focus Card - zeigt gelernte Minuten
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -136,12 +123,9 @@ fun HomeScreen(
                 ) {
                     Column {
                         Text("Focus-Zeit", style = MaterialTheme.typography.titleMedium)
+
                         Text(
-                            text = if (totalPlannedMinutes > 0) {
-                                "$focusMinutes / $totalPlannedMinutes Minuten"
-                            } else {
-                                "$focusMinutes Minuten"
-                            },
+                            text = "$focusMinutes / $totalPlannedMinutes min",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -156,12 +140,12 @@ fun HomeScreen(
                 }
             }
 
-            // ----- SESSIONS HEUTE -----
             Spacer(modifier = Modifier.height(1.dp))
             Text(
                 text = "Sessions heute",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("home_sessions_today_title")
             )
 
             if (todayLearningItems.isEmpty()) {
@@ -174,22 +158,13 @@ fun HomeScreen(
                 todayLearningItems.forEach { item ->
                     InteractiveTodayLearningCard(
                         item = item,
-                        onClick = { viewModel.selectSessionForEdit(item) },
-                        onStatusChange = { status -> viewModel.updateSessionStatus(item.sessionId, status) },
-                        onNotesChange = { notes -> viewModel.updateSessionNotes(item.sessionId, notes) },
-                        onMarkTopicCompleted = { isCompleted ->
-                            item.goalId?.let { goalId ->
-                                viewModel.markTopicCompleted(goalId, item.topic, isCompleted)
-                            }
-                        },
-                        onStartSession = { onStartSession(item.sessionId) }  // Direkt Timer starten mit sessionId
+                        onClick = { onStartSession(item.sessionId) }
                     )
                 }
             }
         }
     }
 
-    // Reset-Bestätigungs-Dialog
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
@@ -216,27 +191,17 @@ fun HomeScreen(
     }
 }
 
-
-/**
- * Kompakte Karte für Sessions im Dashboard.
- * Zeigt: Lern-Icon | Thema | Minuten | Start-Button
- */
 @Composable
 private fun InteractiveTodayLearningCard(
     item: TodayLearningItem,
     onClick: () -> Unit,
-    onStatusChange: (SessionStatus) -> Unit,
-    onNotesChange: (String) -> Unit,
-    onMarkTopicCompleted: (Boolean) -> Unit,
-    onStartSession: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showOptionsMenu by remember { mutableStateOf(false) }
-    var showNotesDialog by remember { mutableStateOf(false) }
-    var showNotesViewDialog by remember { mutableStateOf(false) }
 
     ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("home_session_card_${item.topic.replace(" ", "_")}"),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -244,25 +209,9 @@ private fun InteractiveTodayLearningCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(
-                    // Nur klickbar wenn nicht abgeschlossen
-                    if (item.status != SessionStatus.COMPLETED) {
-                        Modifier.clickable(onClick = {
-                            // Bei Klick: Notizen anzeigen falls vorhanden, sonst normaler Click
-                            if (item.notes.isNotBlank()) {
-                                showNotesViewDialog = true
-                            } else {
-                                onClick()
-                            }
-                        })
-                    } else {
-                        Modifier
-                    }
-                )
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Lern-Icon (zeigt Bereich an)
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -282,7 +231,6 @@ private fun InteractiveTodayLearningCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Thema und Status
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.moduleName,
@@ -299,43 +247,34 @@ private fun InteractiveTodayLearningCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Status-Badge
-                val statusColor = when (item.status) {
-                    SessionStatus.COMPLETED -> MaterialTheme.colorScheme.primary
-                    SessionStatus.IN_PROGRESS -> MaterialTheme.colorScheme.tertiary
-                    SessionStatus.PLANNED -> MaterialTheme.colorScheme.onSurfaceVariant
-                    SessionStatus.STOPPED -> MaterialTheme.colorScheme.error
-                }
-                val statusText = when (item.status) {
-                    SessionStatus.COMPLETED -> "Abgeschlossen"
-                    SessionStatus.IN_PROGRESS -> "In Bearbeitung"
-                    SessionStatus.PLANNED -> "Geplant"
-                    SessionStatus.STOPPED -> "Gestoppt"
-                }
+                val statusPresentation = item.status.toPresentation()
 
                 Text(
-                    text = statusText,
+                    text = statusPresentation.text,
                     style = MaterialTheme.typography.labelSmall,
-                    color = statusColor
+                    color = statusPresentation.color
                 )
             }
 
-            // Minuten-Anzeige
             Text(
                 text = "${item.durationMinutes} min",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = if (item.status == SessionStatus.STOPPED) {
+                    MaterialTheme.colorScheme.tertiary
+                } else {
+                    MaterialTheme.colorScheme.primary
+                },
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
 
-            // Action-Button basierend auf Status
             when (item.status) {
                 SessionStatus.PLANNED -> {
-                    // Start-Button (Play)
                     FilledIconButton(
-                        onClick = onStartSession,
-                        modifier = Modifier.size(36.dp),
+                        onClick = onClick,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .testTag("home_start_session_${item.topic.replace(" ", "_")}"),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
@@ -347,13 +286,13 @@ private fun InteractiveTodayLearningCard(
                         )
                     }
                 }
+
                 SessionStatus.COMPLETED -> {
-                    // Grünes Häkchen für abgeschlossene Sessions (kein Button mehr)
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .background(
-                                color = Color(0xFF4CAF50),  // Grün
+                                color = Color(0xFF4CAF50),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -366,25 +305,10 @@ private fun InteractiveTodayLearningCard(
                         )
                     }
                 }
-                SessionStatus.IN_PROGRESS -> {
-                    FilledIconButton(
-                        onClick = onStartSession,
-                        modifier = Modifier.size(36.dp),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.inversePrimary
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.PlayArrow,
-                            contentDescription = "Pause",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
+
                 SessionStatus.STOPPED -> {
-                    // Gestoppte Sessions können fortgesetzt werden
                     FilledIconButton(
-                        onClick = onStartSession,
+                        onClick = onClick,
                         modifier = Modifier.size(36.dp),
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.tertiary

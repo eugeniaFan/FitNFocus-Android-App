@@ -2,7 +2,6 @@ package com.example.fitnfocus.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fitnfocus.data.repository.ActivityRepository
 import com.example.fitnfocus.data.repository.LearningGoalRepository
 import com.example.fitnfocus.data.repository.SessionRepository
 import com.example.fitnfocus.data.repository.UserPreferencesRepository
@@ -14,19 +13,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel für den Profil-Screen.
- * Lädt die User-Daten aus dem DataStore und die Lernziele aus Room.
+ * ViewModel for profile screen.
+ * Loads user data from DataStore and learning goals from Room database.
  */
 class ProfileViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val learningGoalRepository: LearningGoalRepository,
-    private val sessionRepository: SessionRepository,
-    private val activityRepository: ActivityRepository
+    private val sessionRepository: SessionRepository
 ) : ViewModel() {
 
-    /**
-     * User-Daten aus dem Onboarding.
-     */
     val user: StateFlow<User> = userPreferencesRepository.userFlow
         .stateIn(
             scope = viewModelScope,
@@ -34,9 +29,6 @@ class ProfileViewModel(
             initialValue = User()
         )
 
-    /**
-     * Alle aktiven Lernziele.
-     */
     val learningGoals: StateFlow<List<LearningGoal>> = learningGoalRepository.getActiveGoals()
         .stateIn(
             scope = viewModelScope,
@@ -45,22 +37,13 @@ class ProfileViewModel(
         )
 
     /**
-     * Setzt das komplette Profil zurück:
-     * - User-Präferenzen (DataStore)
-     * - Lernziele
-     * - Sessions
-     * - Topic-Fortschritte automatisch wenn Goals gelöscht werden
-     * - Aktivitäten
-     *
-     * Danach wird das Onboarding beim nächsten App-Start erneut angezeigt.
+     * Resets complete profile including preferences, goals, sessions, and activities.
+     * Onboarding will be shown again on next app start.
      */
     fun resetProfile() {
         viewModelScope.launch {
-            // Alle Daten löschen
             sessionRepository.deleteAll()
             learningGoalRepository.deleteAll()
-            activityRepository.deleteAll()
-            // User-Präferenzen zuletzt löschen (triggert Onboarding)
             userPreferencesRepository.clearAllPreferences()
         }
     }

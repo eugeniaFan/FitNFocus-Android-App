@@ -1,21 +1,15 @@
 package com.example.fitnfocus.data.mapper
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.fitnfocus.data.local.LearningGoalEntity
 import com.example.fitnfocus.domain.LearningGoal
 import java.time.LocalDate
 
 /**
- * Mapper für LearningGoal ↔ LearningGoalEntity.
- * Zentralisiert die Konvertierung zwischen Domain und Data-Layer.
+ * Mapper between LearningGoal domain model and LearningGoalEntity.
+ * Handles conversion of LocalDate to epochDay for database storage.
  */
 object LearningGoalMapper {
 
-    /**
-     * Konvertiert ein LearningGoalEntity zu einem LearningGoal Domain-Modell.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun entityToDomain(entity: LearningGoalEntity): LearningGoal {
         val topicsList: List<String> = if (entity.topics.isNotBlank()) {
             entity.topics.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -36,10 +30,6 @@ object LearningGoalMapper {
         )
     }
 
-    /**
-     * Konvertiert ein LearningGoal Domain-Modell zu einem LearningGoalEntity.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun domainToEntity(goal: LearningGoal): LearningGoalEntity {
         return LearningGoalEntity(
             id = goal.id,

@@ -3,8 +3,8 @@ package com.example.fitnfocus.domain
 import java.time.LocalDate
 
 /**
- * Repräsentiert den Fortschritt eines Topics.
- * Unabhängig von Sessions - speichert ob ein Topic abgeschlossen wurde.
+ * Domain model for topic progress tracking.
+ * Tracks completion status of individual topics independent of sessions.
  */
 data class TopicProgress(
     val id: Int = 0,
@@ -13,4 +13,3 @@ data class TopicProgress(
     val isCompleted: Boolean = false,
     val completedAt: LocalDate? = null
 )
-

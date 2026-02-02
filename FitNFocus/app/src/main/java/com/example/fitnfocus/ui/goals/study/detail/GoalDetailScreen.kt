@@ -1,7 +1,5 @@
 package com.example.fitnfocus.ui.goals.study.detail
 
-import android.annotation.SuppressLint
-import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,20 +17,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.LearningGoal
 import com.example.fitnfocus.ui.goals.study.TopicStatus
-import com.example.fitnfocus.ui.goals.study.overview.components.FitNFocusColors
+import com.example.fitnfocus.ui.theme.OrangeAccent
+import com.example.fitnfocus.ui.theme.OrangeSoft
+import com.example.fitnfocus.ui.theme.OutlineVariantSoft
+import com.example.fitnfocus.ui.theme.PurplePrimary
+import com.example.fitnfocus.ui.theme.SurfaceVariantSoft
+import com.example.fitnfocus.ui.theme.TextPrimary
+import com.example.fitnfocus.ui.theme.TextSecondary
 import java.time.format.DateTimeFormatter
 
 
 /**
  * Detailansicht eines einzelnen Lernziels mit allen Themen.
  */
-@SuppressLint("NewApi")
+
 @Composable
 fun GoalDetailScreen(
     modifier: Modifier = Modifier,
@@ -49,7 +54,9 @@ fun GoalDetailScreen(
         completedCount.toFloat() / goal.topics.size
     } else 0f
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
         Spacer(modifier = Modifier.height(28.dp))
         Row(
             modifier = Modifier
@@ -57,7 +64,9 @@ fun GoalDetailScreen(
                 .padding(bottom = 1.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick
+            ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
             }
 
@@ -69,7 +78,10 @@ fun GoalDetailScreen(
                 textAlign = TextAlign.Center
             )
 
-            IconButton(onClick = { onEditClick(goal) }) {
+            IconButton(
+                modifier = Modifier.testTag("goal_edit_button"),
+                onClick = { onEditClick(goal) }
+            ) {
                 Icon(imageVector = Icons.Default.Edit, contentDescription = "Lernziel bearbeiten")
             }
         }
@@ -88,11 +100,8 @@ fun GoalDetailScreen(
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                val formattedDate = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                } else {
-                    date.toString()
-                }
+
+                val formattedDate = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
                 Text(
                     text = "Prüfung am $formattedDate",
                     style = MaterialTheme.typography.bodyMedium,
@@ -104,7 +113,9 @@ fun GoalDetailScreen(
         // Fortschritts-Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = FitNFocusColors.PurplePrimary)
+            colors = CardDefaults.cardColors(
+                containerColor = PurplePrimary
+            )
         ) {
             Column(
                 modifier = Modifier
@@ -120,7 +131,7 @@ fun GoalDetailScreen(
                         Text(
                             text = "Fortschritt",
                             style = MaterialTheme.typography.labelMedium,
-                            color = FitNFocusColors.SurfaceVariant.copy(alpha = 0.7f)
+                            color = SurfaceVariantSoft.copy(alpha = 0.7f)
                         )
                         Text(
                             text = "${(progress * 100).toInt()}%",
@@ -130,7 +141,9 @@ fun GoalDetailScreen(
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.End) {
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
                         Text(
                             text = "$completedCount / ${goal.topics.size}",
                             style = MaterialTheme.typography.titleMedium,
@@ -140,7 +153,7 @@ fun GoalDetailScreen(
                         Text(
                             text = "Themen erledigt",
                             style = MaterialTheme.typography.bodySmall,
-                            color = FitNFocusColors.SurfaceVariant.copy(alpha = 0.7f)
+                            color = SurfaceVariantSoft.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -155,7 +168,7 @@ fun GoalDetailScreen(
                         .clip(RoundedCornerShape(99.dp)),
                     trackColor = Color.White.copy(alpha = 0.35f),
                     strokeCap = StrokeCap.Round,
-                    color = FitNFocusColors.OrangeAccent
+                    color = OrangeAccent
                 )
             }
         }
@@ -179,7 +192,10 @@ fun GoalDetailScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                itemsIndexed(goal.topics) { index, topic ->
+
+                itemsIndexed(
+                     goal.topics
+                ) { index, topic ->
                     val isCompleted = topicProgress[topic] == true
                     val topicStatus = topicStatusMap[topic] ?: TopicStatus.NOT_STARTED
 
@@ -215,32 +231,35 @@ private fun TopicTimelineItem(
     }
 
     val statusColor = when (topicStatus) {
-        TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
-        TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
-        TopicStatus.NOT_STARTED -> FitNFocusColors.TextSecondary
+        TopicStatus.COMPLETED -> PurplePrimary
+        TopicStatus.IN_PROGRESS -> OrangeAccent
+        TopicStatus.NOT_STARTED -> TextSecondary
     }
 
     val connectorColor = when (topicStatus) {
-        TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
-        TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
-        TopicStatus.NOT_STARTED -> FitNFocusColors.OutlineVariant
+        TopicStatus.COMPLETED -> PurplePrimary
+        TopicStatus.IN_PROGRESS -> OrangeAccent
+        TopicStatus.NOT_STARTED -> OutlineVariantSoft
     }
 
     val cardColor = when (topicStatus) {
-        TopicStatus.COMPLETED -> FitNFocusColors.SurfaceVariant
-        TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeSoft
+        TopicStatus.COMPLETED -> SurfaceVariantSoft
+        TopicStatus.IN_PROGRESS -> OrangeSoft
         TopicStatus.NOT_STARTED -> Color.White
     }
 
     val circleIconTint = when (topicStatus) {
         TopicStatus.COMPLETED, TopicStatus.IN_PROGRESS -> Color.White
-        TopicStatus.NOT_STARTED -> FitNFocusColors.TextSecondary
+        TopicStatus.NOT_STARTED -> TextSecondary
     }
 
-    val topicTextColor = if (isCompleted) FitNFocusColors.TextSecondary else FitNFocusColors.TextPrimary
+    val topicTextColor =
+        if (isCompleted) TextSecondary else TextPrimary
 
+    val topicTag = "topic_item_" + topic.replace(" ", "_")
     Row(
         modifier = Modifier
+            .testTag(topicTag)
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 2.dp)
@@ -266,9 +285,9 @@ private fun TopicTimelineItem(
                     .clip(CircleShape)
                     .background(
                         when (topicStatus) {
-                            TopicStatus.COMPLETED -> FitNFocusColors.PurplePrimary
-                            TopicStatus.IN_PROGRESS -> FitNFocusColors.OrangeAccent
-                            TopicStatus.NOT_STARTED -> FitNFocusColors.SurfaceVariant
+                            TopicStatus.COMPLETED -> PurplePrimary
+                            TopicStatus.IN_PROGRESS -> OrangeAccent
+                            TopicStatus.NOT_STARTED -> SurfaceVariantSoft
                         }
                     )
                     .clickable(onClick = onToggle),
@@ -281,13 +300,16 @@ private fun TopicTimelineItem(
                         modifier = Modifier.size(16.dp),
                         tint = circleIconTint
                     )
+
                     TopicStatus.IN_PROGRESS -> Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = "In Bearbeitung",
                         modifier = Modifier.size(14.dp),
                         tint = circleIconTint
                     )
-                    TopicStatus.NOT_STARTED -> { /* Leerer Kreis */ }
+
+                    TopicStatus.NOT_STARTED -> { /* Leerer Kreis */
+                    }
                 }
             }
 

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.MotivationType
 
 /**
- * Step 3: Motivationstyp auswählen
+ * Step 3: choose a motivation archetype.
  */
 @Composable
 fun MotivationStep(
@@ -88,7 +88,7 @@ private fun MotivationCard(
                 imageVector = icon,
                 contentDescription = null,
                 tint = if (isSelected) MaterialTheme.colorScheme.primary
-                       else MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.width(16.dp))

@@ -1,7 +1,5 @@
 package com.example.fitnfocus.ui.goals.study
 
-import android.annotation.SuppressLint
-import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +16,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,66 +43,44 @@ import java.time.LocalDate
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("NewApi") // API-Check erfolgt im ViewModel
 @Composable
 fun StudyScreen(
-    onBack: () -> Unit,
     viewModel: StudyViewModel,
-    snackbarHostState: SnackbarHostState,
-    onSessionStopped: () -> Unit = {},    // Stop/Cancel → Dashboard
-    onSessionCompleted: () -> Unit = {},  // Completed → Focus-Bereich
+    onSessionStopped: () -> Unit = {},
+    onSessionCompleted: () -> Unit = {},
     timerViewModel: SessionTimerViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    // Timer UI State
     val timerUiState by timerViewModel.uiState.collectAsState()
 
-    // Fokus-Bereich
     val selectedFocusArea by viewModel.selectedFocusArea.collectAsState()
 
-    // Lern-Navigation
     val learningNavState by viewModel.learningNavState.collectAsState()
     val topicProgress by viewModel.topicProgress.collectAsState()
     val topicStatusMap by viewModel.topicStatusMap.collectAsState()
     val topicSessions by viewModel.topicSessions.collectAsState()
 
-    // UI States
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedSession by viewModel.selectedSession.collectAsState()
 
-    // Lernziele
     val learningGoals by viewModel.learningGoals.collectAsState()
 
-    // Datum für heute (als LocalDate)
-    val today = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        LocalDate.now()
-    } else {
-        null
-    }
+    val today = LocalDate.now()
 
-    // Lade Sessions und Fortschritt beim Anzeigen
     LaunchedEffect(today) {
         if (today != null) {
             viewModel.loadSessionsForDate(today)
         }
     }
 
-    // Aktualisiere Fortschritt wenn sich die Navigation zur Übersicht ändert
     LaunchedEffect(learningNavState) {
         if (learningNavState is LearningNavigationState.Overview) {
             viewModel.refreshAllProgress()
         }
     }
 
-    // Add-Lernziel BottomSheet (gruppierter State)
     val addGoalState by viewModel.addGoalState.collectAsState()
-
-    // Delete-Dialog
     val goalPendingDelete by viewModel.goalPendingDelete.collectAsState()
-
-    // Edit-Lernziel BottomSheet (gruppierter State)
     val editGoalState by viewModel.editGoalState.collectAsState()
-
-    // Session Dialog (gruppierter State)
     val sessionDialogState by viewModel.sessionDialogState.collectAsState()
 
     Scaffold(
@@ -118,21 +93,15 @@ fun StudyScreen(
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
                     actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
-                //snackbarHost = { SnackbarHost(snackbarHostState) }
-                )
-
+            )
         }
-
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
-            //verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ==================== FOKUS-BEREICH SELECTOR ====================
-            // Nur anzeigen wenn nicht im Timer-Modus
             if (learningNavState !is LearningNavigationState.SessionTimer) {
                 FocusAreaSelector(
                     selectedArea = selectedFocusArea,
@@ -140,11 +109,8 @@ fun StudyScreen(
                     modifier = Modifier.height(84.dp)
                 )
             }
-
-            // ==================== CONTENT BASIEREND AUF FOKUS-BEREICH ====================
             when {
                 selectedFocusArea.isAvailable -> {
-                    // Lernen-Bereich mit Navigation
                     StudyNavigationHost(
                         navState = learningNavState,
                         learningGoals = learningGoals,
@@ -157,19 +123,57 @@ fun StudyScreen(
                         onGoalClick = { viewModel.navigateToGoalDetail(it) },
                         onBackToOverview = { viewModel.navigateBackToOverview() },
                         onBackToGoalDetail = { goalId -> viewModel.navigateToGoalDetailById(goalId) },
-                        onTopicClick = { goal, topic -> viewModel.navigateToTopicDetail(goal, topic) },
-                        onTopicToggle = { goalId, topic, completed -> viewModel.toggleTopicProgress(goalId, topic, completed) },
-                        onAddSessionForTopic = { goal, topic ->  viewModel.startSessionForTopic(goal.id, topic, goal.moduleName) },
-                        onAddClick = { viewModel.setShowAddDialog(true) },
+                        onTopicClick = { goal, topic ->
+                            viewModel.navigateToTopicDetail(
+                                goal,
+                                topic
+                            )
+                        },
+                        onTopicToggle = { goalId, topic, completed ->
+                            viewModel.toggleTopicProgress(
+                                goalId,
+                                topic,
+                                completed
+                            )
+                        },
+                        onAddSessionForTopic = { goal, topic ->
+                            viewModel.startSessionForTopic(
+                                goal.id,
+                                topic,
+                                goal.moduleName
+                            )
+                        },
                         onSessionClick = { viewModel.selectSession(it) },
                         onAddGoalClick = { viewModel.openAddGoalSheet() },
                         onDeleteGoalClick = { viewModel.requestDeleteGoal(it) },
                         onEditGoalClick = { viewModel.openEditGoalSheet(it) },
-                        onUpdateSessionStatus = { sessionId, status -> viewModel.updateSessionStatus(sessionId, status) },
-                        onUpdateSessionNotes = { sessionId, notes -> viewModel.updateSessionNotes(sessionId, notes) },
-                        onMarkTopicCompleted = { goalId, topic, isCompleted -> viewModel.markTopicAsCompleted(goalId, topic, isCompleted) },
+                        onUpdateSessionStatus = { sessionId, status ->
+                            viewModel.updateSessionStatus(
+                                sessionId,
+                                status
+                            )
+                        },
+                        onUpdateSessionNotes = { sessionId, notes ->
+                            viewModel.updateSessionNotes(
+                                sessionId,
+                                notes
+                            )
+                        },
+                        onMarkTopicCompleted = { goalId, topic, isCompleted ->
+                            viewModel.markTopicAsCompleted(
+                                goalId,
+                                topic,
+                                isCompleted
+                            )
+                        },
                         onTimerCompleted = { sessionId, goalId, topic, markTopicCompleted, notes ->
-                            viewModel.onTimerCompleted(sessionId, goalId, topic, markTopicCompleted, notes)
+                            viewModel.onTimerCompleted(
+                                sessionId,
+                                goalId,
+                                topic,
+                                markTopicCompleted,
+                                notes
+                            )
                             onSessionCompleted()
                         },
                         onTimerStopped = {
@@ -179,7 +183,6 @@ fun StudyScreen(
                     )
                 }
                 else -> {
-                    // Anderer Bereich (noch nicht verfügbar)
                     ComingSoonContent(
                         focusArea = selectedFocusArea,
                         modifier = Modifier.weight(1f)
@@ -189,19 +192,17 @@ fun StudyScreen(
         }
     }
 
-    // -------- Add Dialog --------
     if (sessionDialogState.showAddDialog) {
         AddSessionDialog(
             topic = sessionDialogState.newTopic,
             isLoading = isLoading,
             onDismiss = { viewModel.setShowAddDialog(false) },
             onSave = { durationMinutes, addToCalendar ->
-                viewModel.saveSession(durationMinutes, addToCalendar)
+                viewModel.saveSession(durationMinutes, addToCalendar, startTimer = false)
             }
         )
     }
 
-    // -------- Edit Dialog --------
     if (selectedSession != null) {
         EditSessionDialog(
             session = selectedSession!!,
@@ -212,7 +213,6 @@ fun StudyScreen(
         )
     }
 
-    // BottomSheet: neues Lernziel hinzufügen
     if (addGoalState.showSheet) {
         AddLearningGoalBottomSheet(
             moduleName = addGoalState.moduleName,
@@ -230,7 +230,6 @@ fun StudyScreen(
         )
     }
 
-    // -------- Delete Dialog --------
     if (goalPendingDelete != null) {
         AlertDialog(
             onDismissRequest = { viewModel.cancelDeleteGoal() },
@@ -251,7 +250,6 @@ fun StudyScreen(
         )
     }
 
-    // BottomSheet: Lernziel bearbeiten
     if (editGoalState.showSheet) {
         EditLearningGoalBottomSheet(
             moduleName = editGoalState.moduleName,
@@ -271,9 +269,8 @@ fun StudyScreen(
 }
 
 
-
 /**
- * Platzhalter-Inhalt für Bereiche, die noch nicht verfügbar sind.
+ * Placeholder for future content.
  */
 @Composable
 private fun ComingSoonContent(

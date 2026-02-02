@@ -16,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -45,7 +44,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.domain.StudySession
-import com.example.fitnfocus.ui.goals.study.overview.components.FitNFocusColors
+import com.example.fitnfocus.ui.common.toPresentation
+import com.example.fitnfocus.ui.theme.OrangeAccent
+import com.example.fitnfocus.ui.theme.PurpleContainer
 
 /**
  * Erweiterte Session-Card mit Status, Notes und Topic-Completion.
@@ -66,17 +67,23 @@ fun EnhancedSessionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = FitNFocusColors.PurpleContainer.copy(alpha = 0.70f)
+            containerColor = PurpleContainer.copy(alpha = 0.70f)
         ),
         onClick = onClick
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = "${session.durationMinutes} min",
                         style = MaterialTheme.typography.titleMedium,
@@ -85,38 +92,40 @@ fun EnhancedSessionCard(
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier
+                            .padding(top = 4.dp)
                     ) {
-                        val statusColor = when (session.status) {
-                            SessionStatus.COMPLETED -> MaterialTheme.colorScheme.primary
-                            SessionStatus.IN_PROGRESS -> MaterialTheme.colorScheme.tertiary
-                            SessionStatus.PLANNED -> MaterialTheme.colorScheme.onSurfaceVariant
-                            SessionStatus.STOPPED -> MaterialTheme.colorScheme.error
-                        }
-                        val statusText = when (session.status) {
-                            SessionStatus.COMPLETED -> "Abgeschlossen"
-                            SessionStatus.IN_PROGRESS -> "In Bearbeitung"
-                            SessionStatus.PLANNED -> "Geplant"
-                            SessionStatus.STOPPED -> "Gestoppt"
-                        }
+                        // Status-Badge (zentralisiert)
+                        val statusPresentation = session.status.toPresentation()
 
                         Surface(
-                            color = statusColor.copy(alpha = 0.1f),
+                            color = statusPresentation.color.copy(alpha = 0.1f),
                             shape = MaterialTheme.shapes.small
                         ) {
                             Text(
-                                text = statusText,
+                                text = statusPresentation.text,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = statusColor,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                color = statusPresentation.color,
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp,
+                                        vertical = 4.dp)
                             )
                         }
                     }
                 }
 
                 Box {
-                    IconButton(onClick = { showStatusMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Status ändern")
+                    val isCompleted = session.status == SessionStatus.COMPLETED
+                    IconButton(
+                        onClick = { showStatusMenu = true },
+                        enabled = !isCompleted
+                    ) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "Status ändern",
+                            tint = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                   else MaterialTheme.colorScheme.onSurface
+                        )
                     }
 
                     DropdownMenu(
@@ -125,17 +134,16 @@ fun EnhancedSessionCard(
                     ) {
                         DropdownMenuItem(
                             text = { Text("Geplant") },
-                            onClick = { onStatusChange(SessionStatus.PLANNED); showStatusMenu = false },
+                            onClick = {
+                                onStatusChange(SessionStatus.PLANNED); showStatusMenu = false
+                            },
                             leadingIcon = { Icon(Icons.Default.Schedule, null) }
                         )
                         DropdownMenuItem(
-                            text = { Text("In Bearbeitung") },
-                            onClick = { onStatusChange(SessionStatus.IN_PROGRESS); showStatusMenu = false },
-                            leadingIcon = { Icon(Icons.Default.PlayArrow, null) }
-                        )
-                        DropdownMenuItem(
                             text = { Text("Abgeschlossen") },
-                            onClick = { onStatusChange(SessionStatus.COMPLETED); showStatusMenu = false },
+                            onClick = {
+                                onStatusChange(SessionStatus.COMPLETED); showStatusMenu = false
+                            },
                             leadingIcon = { Icon(Icons.Default.Check, null) }
                         )
                     }
@@ -165,9 +173,13 @@ fun EnhancedSessionCard(
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.primary
                     ),
-                    border = BorderStroke(1.dp, FitNFocusColors.OrangeAccent)
+                    border = BorderStroke(1.dp, OrangeAccent)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.Notes,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         if (session.notes.isBlank()) "Notiz" else "Bearbeiten",
@@ -180,7 +192,11 @@ fun EnhancedSessionCard(
                         onClick = { onMarkTopicCompleted(true) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Thema fertig", style = MaterialTheme.typography.labelSmall)
                     }
@@ -200,7 +216,7 @@ fun EnhancedSessionCard(
                     value = notesText,
                     onValueChange = { notesText = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Was wurde erledigt? Todos...") },
+                    placeholder = { Text( text = "Was wurde erledigt? Todos...") },
                     minLines = 3
                 )
             },

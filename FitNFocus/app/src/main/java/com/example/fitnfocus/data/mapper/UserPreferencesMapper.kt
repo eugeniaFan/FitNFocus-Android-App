@@ -6,18 +6,13 @@ import com.example.fitnfocus.domain.PersonalityProfile
 import com.example.fitnfocus.domain.User
 
 /**
- * Mapper für User-Präferenzen zwischen DataStore (Preferences) und Domain (User).
- *
- * Defaults werden aus den Domain-Klassen übernommen (Single Source of Truth).
+ * Mapper between DataStore Preferences and User domain model.
+ * Uses domain defaults as single source of truth for fallback values.
  */
-object UserPreferencesMapper {
+object UserPreferencesMapper { // TODO Simplify and align with other mapper implementations
 
-    // Domain-Defaults als Referenz (aus User() und PersonalityProfile())
     private val defaults = User()
 
-    /**
-     * Konvertiert DataStore Preferences zu einem User Domain-Modell.
-     */
     fun preferencesToUser(preferences: Preferences): User {
         return User(
             role = parseEnum(preferences[UserPreferencesKeys.USER_ROLE], defaults.role),
@@ -37,19 +32,14 @@ object UserPreferencesMapper {
         )
     }
 
-    /**
-     * Extrahiert nur den Onboarding-Status aus Preferences.
-     */
     fun preferencesToIsOnboarded(preferences: Preferences): Boolean {
         return preferences[UserPreferencesKeys.IS_ONBOARDED] ?: defaults.isOnboarded
     }
 
     /**
-     * Parst ein Enum sicher aus einem String.
-     * Gibt Default zurück wenn raw null ist oder kein gültiger Enum-Wert.
+     * Safely parses enum from string with fallback to default value.
      */
     private inline fun <reified T : Enum<T>> parseEnum(raw: String?, default: T): T {
         return raw?.let { runCatching { enumValueOf<T>(it) }.getOrNull() } ?: default
     }
 }
-

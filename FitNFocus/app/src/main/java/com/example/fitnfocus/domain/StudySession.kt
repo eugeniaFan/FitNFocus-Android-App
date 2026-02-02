@@ -3,26 +3,25 @@ package com.example.fitnfocus.domain
 import java.time.LocalDate
 
 /**
- * Status einer Lernsession.
+ * Status of a study session.
  */
 enum class SessionStatus {
-    PLANNED,      // Geplant
-    IN_PROGRESS,  // In Bearbeitung,
-    STOPPED,      // Gestoppt
-    COMPLETED     // Abgeschlossen
+    PLANNED,
+    STOPPED,
+    COMPLETED
 }
 
 /**
- * Repräsentiert eine Lernsession.
- * Eine Session ist ein "Event" - eine konkrete Lerneinheit für ein Topic.
+ * Domain model for study sessions.
+ * Represents a concrete learning event for a specific topic.
  */
 data class StudySession(
     val id: Int = 0,
-    val topic: String,                 // Das Thema der Session (früher "subject")
+    val topic: String,
     val durationMinutes: Int,
-    val date: LocalDate,               // Datum der Session
-    val goalId: Int? = null,           // Verknüpfung zum Lernziel
+    val date: LocalDate,
+    val goalId: Int? = null,
     val status: SessionStatus = SessionStatus.PLANNED,
-    val notes: String = "",            // Notizen/Todos
-    val elapsedSeconds: Int = 0        // Tatsächlich fokussierte Zeit (für Partial Completion)
+    val notes: String = "",
+    val elapsedSeconds: Int = 0
 )

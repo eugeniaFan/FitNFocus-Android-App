@@ -4,12 +4,12 @@ import com.example.fitnfocus.domain.SessionStatus
 import java.time.LocalDate
 
 /**
- * UI-Modelle für den HomeScreen / Dashboard.
- * Getrennt vom ViewModel für Single Responsibility.
+ * UI models for home screen dashboard.
+ * Separated from ViewModel for single responsibility.
  */
 
 /**
- * Aggregierter UI-State für das Dashboard.
+ * Aggregated UI state for the dashboard.
  */
 data class DashboardState(
     val todayLearningItems: List<TodayLearningItem> = emptyList(),
@@ -19,8 +19,7 @@ data class DashboardState(
 )
 
 /**
- * UI-Modell für eine Session auf dem Dashboard.
- * Enthält alle Informationen, die die UI zur Darstellung benötigt.
+ * UI model for a session card on the dashboard.
  */
 data class TodayLearningItem(
     val sessionId: Int,
@@ -28,13 +27,14 @@ data class TodayLearningItem(
     val moduleName: String,
     val topic: String,
     val durationMinutes: Int,
+    val elapsedSeconds: Int = 0,
     val status: SessionStatus,
     val notes: String,
     val isTopicCompleted: Boolean
 )
 
 /**
- * UI-Modell für ein heute abgeschlossenes Thema.
+ * UI model for a topic completed today.
  */
 data class CompletedTopicItem(
     val moduleName: String,

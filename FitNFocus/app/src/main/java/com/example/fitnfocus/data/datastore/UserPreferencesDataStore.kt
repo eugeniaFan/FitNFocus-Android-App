@@ -6,21 +6,15 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 
 /**
- * DataStore-Infrastruktur für User-Präferenzen.
- *
- * Diese Datei enthält ausschließlich die DataStore-Setup-Details:
- * - Context Extension für den DataStore
- * - DataStore-Name
- *
- * Wird im DI-Container verwendet, um den DataStore zu erstellen
- * und ins Repository zu injizieren.
+ * DataStore infrastructure for user preferences.
+ * Provides singleton access to user preference storage via Context extension.
  */
 
 private const val USER_PREFERENCES_NAME = "user_preferences"
 
 /**
- * Context Extension für den User-Preferences DataStore.
- * Singleton-Pattern: Erstellt den DataStore nur einmal pro Application.
+ * Context extension for user preferences DataStore.
+ * Implements singleton pattern ensuring single instance per application.
  */
 val Context.userPreferencesDataStore: DataStore<Preferences> by preferencesDataStore(
     name = USER_PREFERENCES_NAME

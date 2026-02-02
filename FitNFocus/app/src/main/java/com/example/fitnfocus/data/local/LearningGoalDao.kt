@@ -9,7 +9,8 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Data Access Object für Lernziele.
+ * Data Access Object for learning goals.
+ * Provides database operations for managing learning goals with their progress and exam dates.
  */
 @Dao
 interface LearningGoalDao {
@@ -24,8 +25,8 @@ interface LearningGoalDao {
     fun getActiveGoals(): Flow<List<LearningGoalEntity>>
 
     /**
-     * Fügt ein Goal ein und gibt die generierte ID zurück.
-     * Bei Konflikt (gleiche ID) wird ein Fehler geworfen.
+     * Inserts a new learning goal and returns the generated ID.
+     * Throws an exception if a goal with the same ID already exists.
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertGoal(goal: LearningGoalEntity): Long
@@ -42,9 +43,6 @@ interface LearningGoalDao {
     @Query("UPDATE learning_goal SET isCompleted = :isCompleted WHERE id = :id")
     suspend fun updateCompletionStatus(id: Int, isCompleted: Boolean)
 
-    /**
-     * Löscht alle Lernziele.
-     */
     @Query("DELETE FROM learning_goal")
     suspend fun deleteAll()
 }

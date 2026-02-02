@@ -6,8 +6,4 @@ object FnfDefaults {
     val screenPadding = Dimens.screenPadding
     val cardPadding = Dimens.cardPadding
     val buttonHeight = Dimens.buttonHeight
-
-    // Für Forms / TextFields
-    val fieldVerticalSpacing = Dimens.l
-    val sectionSpacing = Dimens.xl
 }

@@ -83,7 +83,7 @@ fun EditSessionDialog(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null)
                     Spacer(Modifier.width(6.dp))
-                    Text("Loeschen")
+                    Text("Löschen")
                 }
             }
         }

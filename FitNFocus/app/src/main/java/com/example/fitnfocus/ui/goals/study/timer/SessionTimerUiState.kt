@@ -37,4 +37,3 @@ data class SessionTimerUiState(
     val elapsedSeconds: Int
         get() = totalSeconds - remainingSeconds
 }
-

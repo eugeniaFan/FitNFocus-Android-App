@@ -1,7 +1,8 @@
 package com.example.fitnfocus.ui.focus
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -18,138 +20,61 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.R
 import com.example.fitnfocus.di.AppViewModelProvider
-import com.example.fitnfocus.ui.goals.study.timer.SessionTimerScreen
-import com.example.fitnfocus.viewmodel.SessionTimerViewModel
 import com.example.fitnfocus.viewmodel.FocusViewModel
 
 
 /**
- * Focus-Screen: Zeigt aktive/geplante Sessions und gesammelte Münzen.
- * @param autoStartSessionId Wenn gesetzt, wird der Timer für diese Session direkt gestartet.
- * @param onNavigateToCollection Callback zur Sammlung-Navigation
- * @param onSessionCompleted Callback wenn Session erfolgreich beendet wird → Focus-Bereich
- * @param onSessionStopped Callback wenn Session gestoppt/abgebrochen wird → Dashboard
+ * Focus screen showing collected coins and a preview of focus types.
+ * Timer logic lives in SessionTimerRoute.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FocusScreen(
-    autoStartSessionId: Int? = null,
     onNavigateToCollection: () -> Unit = {},
-    onSessionCompleted: () -> Unit = {},
-    onSessionStopped: () -> Unit = {},  // Stop/Cancel → Dashboard
-    viewModel: FocusViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    timerViewModel: SessionTimerViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    viewModel: FocusViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val completedSessionsCount by viewModel.completedSessionsCount.collectAsState()
-    val activeTimerSession by viewModel.activeTimerSession.collectAsState()
-    val timerUiState by timerViewModel.uiState.collectAsState()
-
-    // Verhindert Flackern während Navigation (FocusContent wird nicht kurz angezeigt)
-    var isNavigating by remember { mutableStateOf(false) }
-
-    val uiState = FocusUiState(
-        coinsTotal = completedSessionsCount,
-        hasActiveTimer = activeTimerSession != null
-    )
 
     LaunchedEffect(Unit) {
         viewModel.loadTodaySessions()
     }
 
-    // Automatisch Timer starten wenn sessionId übergeben wurde
-    LaunchedEffect(autoStartSessionId) {
-        if (autoStartSessionId != null && autoStartSessionId > 0) {
-            viewModel.startTimerForSessionId(autoStartSessionId)
-        }
-    }
-
-    // Initialisiere SessionTimerViewModel wenn activeTimerSession sich ändert
-    LaunchedEffect(activeTimerSession) {
-        val session = activeTimerSession
-        if (session != null && timerUiState.sessionId != session.id) {
-            timerViewModel.initializeSession(
-                sessionId = session.id,
-                sessionTopic = session.topic,
-                moduleName = viewModel.getModuleNameForSession(session),
-                durationMinutes = session.durationMinutes,
-                goalId = session.goalId
-            )
-        }
-    }
-
-    // Timer-Screen (oder während Navigation: nichts anzeigen)
-    if (uiState.hasActiveTimer || isNavigating) {
-        // Safety-Check (Race Condition vermeiden)
-        val session = activeTimerSession
-        if (session == null) {
-            // Während Navigation: leerer Screen (kein Flackern)
-            if (isNavigating) {
-                return
-            }
-            // Fallback: falls hasActiveTimer true wäre, session aber null ist
-            FocusContent(
-                state = uiState.copy(hasActiveTimer = false),
-                onNavigateToCollection = onNavigateToCollection
-            )
-            return
-        }
-
-        SessionTimerScreen(
-            uiState = timerUiState,
-            onStartTimer = { timerViewModel.startTimer() },
-            onPauseTimer = { timerViewModel.pauseTimer() },
-            onResumeTimer = { timerViewModel.resumeTimer() },
-            onStopTimer = { timerViewModel.stopTimer() },
-            onConfirmPartialSave = {
-                isNavigating = true
-                timerViewModel.confirmPartialSave {
-                    // Nach DB-Operation: Navigation zum Dashboard
-                    onSessionStopped()
-                    viewModel.cancelTimer()
-
-                }
-            },
-            onDismissPartialSave = {
-                isNavigating = true
-                timerViewModel.dismissPartialSave {
-                    onSessionStopped()
-                    viewModel.cancelTimer()
-
-                }
-            },
-            onCompleteSession = {
-                timerViewModel.completeSession {
-                    // Nach DB-Operation: Navigation zum Focus-Bereich
-                    viewModel.cancelTimer()
-                    viewModel.loadTodaySessions()
-                    onSessionCompleted()
-                }
-            },
-            onUpdateNotes = { timerViewModel.updateNotes(it) },
-            onUpdateMarkTopicCompleted = { timerViewModel.updateMarkTopicCompleted(it) },
-            onSessionCompleted = {
-                // Dieser Callback wird jetzt nicht mehr benötigt da alles in onCompleteSession passiert
-            },
-            onAbort = {
-                // Stop/Cancel ohne Speichern → Dashboard
-                timerViewModel.cancelTimer()
-                onSessionStopped()
-                viewModel.cancelTimer()
-            }
-        )
-        return
-    }
     FocusContent(
-        state = uiState,
+        coinsTotal = completedSessionsCount,
         onNavigateToCollection = onNavigateToCollection
     )
 }
 
 @Composable
 private fun FocusContent(
-    state: FocusUiState,
+    coinsTotal: Int,
     onNavigateToCollection: () -> Unit,
 ) {
+    var lastCoins by remember { mutableStateOf(coinsTotal) }
+    var scaleTrigger by remember { mutableStateOf(false) }
+
+    LaunchedEffect(coinsTotal) {
+        if (coinsTotal > lastCoins) {
+            scaleTrigger = true
+        }
+        lastCoins = coinsTotal
+    }
+    // Scale animation emphasizes newly earned coins.
+    val scale by animateFloatAsState(
+        targetValue = if (scaleTrigger) 1.2f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "coinScale"
+    )
+
+    LaunchedEffect(scaleTrigger) {
+        if (scaleTrigger) {
+            kotlinx.coroutines.delay(150)
+            scaleTrigger = false
+        }
+    }
+
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFFF5F1E8), Color(0xFFE6DAC8))
     )
@@ -161,16 +86,14 @@ private fun FocusContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
         Column {
             Text(
                 text = "Focus",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Normal,
 
-            )
+                )
             Spacer(modifier = Modifier.height(12.dp))
-            // Deine Erfolge
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -204,21 +127,23 @@ private fun FocusContent(
                         Image(
                             painter = painterResource(id = R.drawable.ic_collectible_coin),
                             contentDescription = "Münze",
-                            modifier = Modifier.size(34.dp)
+                            modifier = Modifier
+                                .size(34.dp)
+                                .scale(scale)
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(
-                            text = state.coinsTotal.toString(),
+                            text = coinsTotal.toString(),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFFB300)
+                            color = Color(0xFFFFB300),
+                            modifier = Modifier.scale(scale)
                         )
                     }
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Deine Sammlung
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -243,12 +168,11 @@ private fun FocusContent(
                         color = Color(0xFFE5E5EC)
                     )
 
-                    // Preview Grid (4 fixe Typen)
                     val types = FocusTypes.staticTypes()
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp,
-                        )) {
+                        verticalArrangement = Arrangement.spacedBy(space = 10.dp)
+                    ) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             FocusTypePreviewCard(types[0], Modifier.weight(1f))
                             FocusTypePreviewCard(types[1], Modifier.weight(1f))
@@ -278,7 +202,6 @@ private fun FocusContent(
     }
 }
 
-
 @Composable
 private fun FocusTypePreviewCard(
     type: FocusTypeUi,
@@ -290,7 +213,11 @@ private fun FocusTypePreviewCard(
         color = Color(0xFFFFFFFF)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(type.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                type.title,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodyMedium
+            )
             Spacer(Modifier.height(2.dp))
             Text(
                 type.subtitle,

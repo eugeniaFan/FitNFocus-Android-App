@@ -1,25 +1,20 @@
 package com.example.fitnfocus.data.mapper
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.fitnfocus.data.local.StudySessionEntity
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.domain.StudySession
 import java.time.LocalDate
 
 /**
- * Mapper für StudySession ↔ StudySessionEntity.
+ * Mapper between StudySession domain model and StudySessionEntity.
+ * Handles conversion of LocalDate to epochDay and status enum parsing.
  */
 object SessionMapper {
 
-    /**
-     * Konvertiert ein StudySessionEntity zu einem StudySession Domain-Modell.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun entityToDomain(entity: StudySessionEntity): StudySession {
         val date = LocalDate.ofEpochDay(entity.epochDay)
 
-        // Backward-Compatibility zu wahren, falls alte DB-Werte existieren:
+        // Preserve backward compatibility for legacy database values
         val parsedStatus = try {
             SessionStatus.valueOf(entity.status)
         } catch (_: Exception) {
@@ -38,10 +33,6 @@ object SessionMapper {
         )
     }
 
-    /**
-     * Konvertiert ein StudySession Domain-Modell zu einem StudySessionEntity.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun domainToEntity(session: StudySession): StudySessionEntity {
         return StudySessionEntity(
             id = session.id,

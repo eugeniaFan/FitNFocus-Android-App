@@ -5,8 +5,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
- * Repräsentiert einen Fokus-Bereich in der App.
- * Nur LEARNING ist aktuell implementiert, andere sind "Coming Soon".
+ * Focus areas available in the app.
+ * Only LEARNING is currently implemented, others are planned for future releases.
  */
 enum class FocusArea(
     val displayName: String,
@@ -44,4 +44,3 @@ enum class FocusArea(
         isAvailable = false
     )
 }
-

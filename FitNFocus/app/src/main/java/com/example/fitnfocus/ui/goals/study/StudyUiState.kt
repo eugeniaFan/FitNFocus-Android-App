@@ -3,20 +3,20 @@ package com.example.fitnfocus.ui.goals.study
 import com.example.fitnfocus.domain.StudySession
 
 /**
- * Navigation-State für den Lern-Bereich.
- * Definiert alle möglichen Screens innerhalb des Study-Features.
+ * Navigation state for the study feature.
+ * Defines the screens shown within the study flow.
  */
 sealed class LearningNavigationState {
-    /** Übersicht aller Lernziele */
+    /** Overview of all learning goals. */
     data object Overview : LearningNavigationState()
 
-    /** Detail-Ansicht eines Lernziels mit Topics */
+    /** Detail view for a learning goal with its topics. */
     data class GoalDetail(val goalId: Int) : LearningNavigationState()
 
-    /** Sessions-Liste für ein bestimmtes Topic */
+    /** Session list for a specific topic. */
     data class TopicDetail(val goalId: Int, val topic: String) : LearningNavigationState()
 
-    /** Timer-Screen für eine aktive Session */
+    /** Timer screen for an active session. */
     data class SessionTimer(
         val goalId: Int,
         val topic: String,
@@ -27,30 +27,32 @@ sealed class LearningNavigationState {
 }
 
 /**
- * Status eines Topics basierend auf Sessions und TopicProgress.
+ * Status of a topic based on sessions and topic progress.
  */
 enum class TopicStatus {
-    /** Keine Session für dieses Topic erstellt */
+    /** No session created for this topic yet */
     NOT_STARTED,
 
-    /** Mindestens eine Session erstellt, aber Topic nicht abgeschlossen */
+    /** At least one session created, but topic not completed */
     IN_PROGRESS,
 
-    /** Topic als abgeschlossen markiert */
+    /** Topic marked as completed */
     COMPLETED
 }
 
 /**
- * Repräsentiert ein Topic zur Auswahl im Dropdown.
+ * UI model for a selectable topic.
  */
 data class TopicItem(
     val name: String,
-    val goalId: Int?,           // null = manuell hinzugefügt
-    val goalName: String? = null // Name des Moduls für Anzeige
+    val goalId: Int?,           // null when added manually
+    val goalName: String? = null // module name for display
 )
 
+data class GoalTopicKey(val goalId: Int, val topic: String)
+
 /**
- * UI State für das Hinzufügen eines neuen Lernziels.
+ * UI state for adding a new learning goal.
  */
 data class AddGoalUiState(
     val showSheet: Boolean = false,
@@ -62,7 +64,7 @@ data class AddGoalUiState(
 )
 
 /**
- * UI State für das Bearbeiten eines Lernziels.
+ * UI state for editing an existing learning goal.
  */
 data class EditGoalUiState(
     val showSheet: Boolean = false,
@@ -74,9 +76,8 @@ data class EditGoalUiState(
     val isSaving: Boolean = false
 )
 
-
 /**
- * UI State für Session-Dialoge.
+ * UI state for session dialogs.
  */
 data class SessionDialogUiState(
     val showAddDialog: Boolean = false,
@@ -84,11 +85,7 @@ data class SessionDialogUiState(
     val showDeleteConfirmDialog: Boolean = false,
     val editingSession: StudySession? = null,
     val deletingSession: StudySession? = null,
-
-    // Add Dialog Fields
     val newTopic: String = "",
     val selectedTopic: TopicItem? = null,
-
     val isSaving: Boolean = false
 )
-

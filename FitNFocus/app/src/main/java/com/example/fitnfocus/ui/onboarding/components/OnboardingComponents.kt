@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
 /**
- * Top Bar mit Schritt-Anzeige und Skip-Button.
+ * Top bar showing step progress and a skip action.
  */
 @Composable
 fun OnboardingTopBar(
@@ -41,7 +41,7 @@ fun OnboardingTopBar(
 }
 
 /**
- * Fortschrittsbalken für das Onboarding.
+ * Progress indicator for onboarding steps.
  */
 @Composable
 fun OnboardingProgressIndicator(
@@ -69,7 +69,7 @@ fun OnboardingProgressIndicator(
 }
 
 /**
- * Navigation Buttons (Zurück/Weiter) am unteren Rand.
+ * Bottom navigation actions for the onboarding flow.
  */
 @Composable
 fun OnboardingNavigationButtons(
@@ -87,7 +87,7 @@ fun OnboardingNavigationButtons(
             .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Zurück-Button (nicht auf erstem Screen)
+        // Hide back on the first step.
         if (currentStep > 0) {
             OutlinedButton(
                 onClick = onPrevious,
@@ -103,7 +103,6 @@ fun OnboardingNavigationButtons(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Weiter/Fertig-Button
         Button(
             onClick = {
                 if (currentStep == totalSteps - 1) onComplete()

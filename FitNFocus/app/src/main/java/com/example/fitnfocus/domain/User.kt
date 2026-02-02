@@ -1,12 +1,11 @@
 package com.example.fitnfocus.domain
 
 /**
- * Benutzer-Datenmodell.
- * Enthält alle Informationen, die im Onboarding erfasst werden.
+ * Domain model for user profile.
+ * Contains all data collected during onboarding.
  */
 data class User(
     val role: UserRole = UserRole.STUDENT,
     val isOnboarded: Boolean = false,
     val personalityProfile: PersonalityProfile = PersonalityProfile()
 )
-

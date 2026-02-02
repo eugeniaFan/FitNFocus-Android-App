@@ -20,6 +20,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.FocusArea
+import com.example.fitnfocus.ui.theme.OutlineVariantSoft
+import com.example.fitnfocus.ui.theme.PurpleContainer
+import com.example.fitnfocus.ui.theme.PurplePrimary
+import com.example.fitnfocus.ui.theme.PurpleTintBg
+import com.example.fitnfocus.ui.theme.SurfaceWhite
+import com.example.fitnfocus.ui.theme.TextSecondary
 
 /**
  * Horizontale scrollbare Liste der Fokus-Bereiche.
@@ -66,7 +72,7 @@ fun FocusAreaSelector(
                         Brush.horizontalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                FitNFocusColors.PurpleTintBg
+                                PurpleTintBg
                             )
                         )
                     )
@@ -83,7 +89,7 @@ fun FocusAreaSelector(
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
-                                FitNFocusColors.PurpleTintBg,
+                                PurpleTintBg,
                                 Color.Transparent
                             )
                         )
@@ -103,10 +109,13 @@ private fun FocusAreaItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isSelected) FitNFocusColors.PurpleContainer else FitNFocusColors.Surface
-    val borderColor = if (isSelected) FitNFocusColors.PurplePrimary else FitNFocusColors.OutlineVariant
-    val iconTint = if (isSelected) FitNFocusColors.PurplePrimary else FitNFocusColors.TextSecondary
-    val labelColor = if (isSelected) FitNFocusColors.PurplePrimary else FitNFocusColors.TextSecondary
+    val backgroundColor =
+        if (isSelected) PurpleContainer else SurfaceWhite
+    val borderColor =
+        if (isSelected) PurplePrimary else OutlineVariantSoft
+    val iconTint = if (isSelected) PurplePrimary else TextSecondary
+    val labelColor =
+        if (isSelected) PurplePrimary else TextSecondary
 
     Column(
         modifier = modifier

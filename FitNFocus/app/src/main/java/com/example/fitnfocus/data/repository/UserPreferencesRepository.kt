@@ -10,39 +10,31 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * Repository für Benutzer-Präferenzen.
- *
- * Verantwortlichkeiten:
- * - Flows für reaktives Lesen von User-Daten
- * - Edit-Operationen für Schreibzugriffe
- *
- * Best Practices:
- * - Kein Context: DataStore wird über DI injiziert (testbar!)
- * - Mapping delegiert an UserPreferencesMapper (Single Responsibility)
- * - Keys aus UserPreferencesKeys (keine Magic Strings)
+ * Repository for user preferences and profile data.
+ * Manages DataStore operations and provides reactive flows for user state.
  */
 class UserPreferencesRepository(
     private val dataStore: DataStore<Preferences>
 ) {
 
     /**
-     * Flow, der den aktuellen Benutzer mit allen Präferenzen liefert.
-     * Reagiert automatisch auf Änderungen im DataStore.
+     * Reactive flow of current user with all preferences.
+     * Automatically updates when DataStore changes.
      */
     val userFlow: Flow<User> = dataStore.data.map { preferences ->
         UserPreferencesMapper.preferencesToUser(preferences)
     }
 
     /**
-     * Flow, der nur den Onboarding-Status liefert.
-     * Wird verwendet, um zu entscheiden, ob das Onboarding angezeigt werden soll.
+     * Reactive flow of onboarding status.
+     * Used to determine whether to show onboarding screens.
      */
     val isOnboardedFlow: Flow<Boolean> = dataStore.data.map { preferences ->
         UserPreferencesMapper.preferencesToIsOnboarded(preferences)
     }
 
     /**
-     * Speichert das komplette Benutzerprofil nach dem Onboarding.
+     * Saves complete user profile after onboarding.
      */
     suspend fun saveUser(user: User) {
         dataStore.edit { preferences ->
@@ -55,18 +47,12 @@ class UserPreferencesRepository(
         }
     }
 
-    /**
-     * Markiert das Onboarding als abgeschlossen.
-     */
     suspend fun setOnboardingCompleted() {
         dataStore.edit { preferences ->
             preferences[UserPreferencesKeys.IS_ONBOARDED] = true
         }
     }
 
-    /**
-     * Setzt alle Präferenzen zurück (für Testzwecke).
-     */
     suspend fun clearAllPreferences() {
         dataStore.edit { preferences ->
             preferences.clear()

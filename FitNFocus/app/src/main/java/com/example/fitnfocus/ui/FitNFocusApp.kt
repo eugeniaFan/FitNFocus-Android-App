@@ -1,6 +1,5 @@
 package com.example.fitnfocus.ui
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -30,62 +30,54 @@ import com.example.fitnfocus.viewmodel.MainViewModel
 import com.example.fitnfocus.viewmodel.StudyViewModel
 
 
-@SuppressLint("NewApi")  // API-Checks für ViewModels werden intern behandelt
 @Composable
 fun FitNFocusApp(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    // Onboarding-Status über MainViewModel (saubere Architektur: UI → ViewModel → Repository)
     val mainViewModel: MainViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val mainUiState by mainViewModel.uiState.collectAsState()
 
-    // ==================== SHARED VIEWMODELS ====================
-    // StudyViewModel auf App-Ebene erstellen, damit der State zwischen Tab-Wechseln erhalten bleibt
     val studyViewModel: StudyViewModel = viewModel(factory = AppViewModelProvider.Factory)
 
-    // Prüfe ob Focus-Screen mit aktivem Timer ist
-    // Navbar nur ausblenden wenn sessionId > 0 im Argument UND in der Route
-    val sessionIdArg = backStackEntry?.arguments?.getInt("sessionId") ?: -1
-    val routeContainsSession = currentRoute?.contains("sessionId=") == true && !currentRoute.contains("sessionId=-1")
-    val isFocusTimerActive = currentRoute?.startsWith("focus") == true &&
-            sessionIdArg > 0 &&
-            routeContainsSession
+    val isSessionTimerActive = currentRoute?.startsWith("session_timer") == true
 
-    // Während des Ladens einen Ladebildschirm anzeigen
     if (mainUiState is MainUiState.Loading) {
         Box(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .testTag("loading_screen"),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                modifier = Modifier.testTag("loading_indicator")
+            )
         }
         return
     }
 
-    // Ab hier ist mainUiState garantiert Ready
     val isOnboarded = (mainUiState as MainUiState.Ready).isOnboarded
 
-    // BottomBar nur anzeigen, wenn nicht im Onboarding und nicht im aktiven Timer
     val showBottomBar = currentRoute != NavRoutes.Onboarding.route &&
             isOnboarded &&
-            !isFocusTimerActive
+            !isSessionTimerActive
 
-    // startDestination basierend auf Onboarding-Status
     val startDestination = if (isOnboarded) {
-        NavRoutes.Home.route  // Onboarding gemacht -> Dashboard
+        NavRoutes.Home.route
     } else {
-        NavRoutes.Onboarding.route  // Onboarding nicht gemacht -> Onboarding
+        NavRoutes.Onboarding.route
     }
 
     Scaffold(
         modifier = modifier,
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
-                    // Dashboard - Anzeige
+                NavigationBar(
+                    modifier = Modifier.testTag("bottom_bar")
+                ) {
                     NavigationBarItem(
+                        modifier = Modifier.testTag("nav_home"),
                         selected = currentRoute == NavRoutes.Home.route,
                         onClick = {
                             navController.navigate(NavRoutes.Home.route) {
@@ -93,12 +85,18 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
                                 launchSingleTop = true
                             }
                         },
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
+                        icon = {
+                            Icon(
+                                Icons.Default.Home,
+                                contentDescription = "Dashboard"
+                            )
+                        },
                         label = { Text("Dashboard") }
                     )
 
-                    // Focus - Timer & Sammelfiguren
-                    NavigationBarItem(selected = currentRoute?.startsWith(NavRoutes.Focus.route) == true,
+                    NavigationBarItem(
+                        modifier = Modifier.testTag("nav_focus"),
+                        selected = currentRoute?.startsWith(NavRoutes.Focus.route) == true,
                         onClick = {
                             navController.navigate(NavRoutes.Focus.route) {
                                 popUpTo(NavRoutes.Home.route) { inclusive = false }
@@ -109,8 +107,8 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
                         label = { Text("Focus") }
                     )
 
-                    // Ziele - Lernziele verwalten
                     NavigationBarItem(
+                        modifier = Modifier.testTag("nav_goals"),
                         selected = currentRoute == NavRoutes.Goals.route,
                         onClick = {
                             navController.navigate(NavRoutes.Goals.route) {
@@ -118,7 +116,12 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
                                 launchSingleTop = true
                             }
                         },
-                        icon = { Icon(Icons.Default.CollectionsBookmark, contentDescription = "Ziele") },
+                        icon = {
+                            Icon(
+                                Icons.Default.CollectionsBookmark,
+                                contentDescription = "Ziele"
+                            )
+                        },
                         label = { Text("Ziele") }
                     )
                 }
@@ -128,8 +131,8 @@ fun FitNFocusApp(modifier: Modifier = Modifier) {
         FitNFocusNavHost(
             navController = navController,
             startDestination = startDestination,
-            studyViewModel = studyViewModel,  // Shared ViewModel weitergeben
-            modifier = if (isFocusTimerActive) Modifier else Modifier.padding(innerPadding)
+            studyViewModel = studyViewModel,
+            modifier = if (isSessionTimerActive) Modifier else Modifier.padding(innerPadding)
         )
     }
 }

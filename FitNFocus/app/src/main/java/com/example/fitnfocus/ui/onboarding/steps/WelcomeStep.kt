@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
- * Step 0: Willkommensbildschirm
+ * Step 0: welcome screen.
  */
 @Composable
 fun WelcomeStep(modifier: Modifier = Modifier) {
@@ -61,7 +61,10 @@ fun WelcomeStep(modifier: Modifier = Modifier) {
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("✓ Lernziele setzen und verfolgen", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "✓ Lernziele setzen und verfolgen",
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 Text("✓ Aktivitäten tracken", style = MaterialTheme.typography.bodyMedium)
                 Text("✓ Personalisierte Unterstützung", style = MaterialTheme.typography.bodyMedium)
             }

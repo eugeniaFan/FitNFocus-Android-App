@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
@@ -45,11 +46,13 @@ fun AddSessionDialog(
     var addToCalendar by remember { mutableStateOf(false) }
 
     AlertDialog(
+        modifier = Modifier.testTag("add_session_dialog"),
         onDismissRequest = onDismiss,
         title = { Text("Focus Session erstellen") },
         text = {
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Thema-Anzeige (nicht bearbeitbar)
@@ -57,7 +60,9 @@ fun AddSessionDialog(
                     value = topic,
                     onValueChange = { },
                     label = { Text("Thema") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .testTag("add_session_dialog_topic")
+                        .fillMaxWidth(),
                     enabled = false,
                     readOnly = true,
                     singleLine = true
@@ -69,7 +74,9 @@ fun AddSessionDialog(
                     onValueChange = { duration = it },
                     label = { Text("Dauer (Minuten)") },
                     placeholder = { Text("z.B. 45") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .testTag("add_session_duration")
+                        .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
@@ -92,13 +99,15 @@ fun AddSessionDialog(
         },
         confirmButton = {
             Button(
+                modifier = Modifier.testTag("add_session_save"),
                 onClick = {
                     val minutes = duration.toIntOrNull()
                     if (minutes != null && minutes > 0) {
                         onSave(minutes, addToCalendar)
                     }
                 },
-                enabled = !isLoading && topic.isNotBlank() && duration.toIntOrNull()?.let { it > 0 } == true
+                enabled = !isLoading && topic.isNotBlank() && duration.toIntOrNull()
+                    ?.let { it > 0 } == true
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
@@ -106,7 +115,9 @@ fun AddSessionDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Abbrechen") }
+            TextButton(
+                onClick = onDismiss
+            ) { Text("Abbrechen") }
         }
     )
 }

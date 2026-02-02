@@ -1,13 +1,11 @@
 package com.example.fitnfocus.domain
 
 /**
- * Benutzer-Rollen für die App.
- * Wird im Onboarding abgefragt, um personalisierte Inhalte anzubieten.
+ * User roles for app personalization.
+ * Collected during onboarding to provide tailored content.
  */
 enum class UserRole(val displayName: String) {
     STUDENT("Student:in"),
     PROFESSIONAL("Berufstätige:r"),
     OTHER("Anderes")
 }
-
-

@@ -5,20 +5,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import android.content.Context
 
-
+/**
+ * Room database for the FitNFocus application.
+ * Manages study sessions, learning goals, topic progress, and daily activities.
+ */
 @Database(
-    entities = [
-        DailyActivityEntity::class,
-        StudySessionEntity::class,
-        LearningGoalEntity::class,
-        TopicProgressEntity::class
-    ],
-    version = 7,  // Erhöht: date/examDate/completedAt → epochDay (Long statt String)
+    entities = [StudySessionEntity::class, LearningGoalEntity::class, TopicProgressEntity::class],
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
-
-    abstract fun activityDao(): ActivityDao
     abstract fun sessionDao(): SessionDao
     abstract fun learningGoalDao(): LearningGoalDao
     abstract fun topicProgressDao(): TopicProgressDao
@@ -30,18 +26,17 @@ abstract class AppDatabase : RoomDatabase() {
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "fitnfocus_database"
+                    context.applicationContext, AppDatabase::class.java, "fitnfocus_database"
                 )
-                    .fallbackToDestructiveMigration(dropAllTables = true) // Für Entwicklungsphase: löscht DB bei Schema-Änderung
+                    // Development mode: drops database on schema changes
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                 INSTANCE = instance
                 instance
             }
 
-            }
         }
+    }
 
 
 }

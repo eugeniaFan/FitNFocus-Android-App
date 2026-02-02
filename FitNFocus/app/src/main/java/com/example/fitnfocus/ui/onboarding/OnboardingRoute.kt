@@ -10,10 +10,7 @@ import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.viewmodel.OnboardingViewModel
 
 /**
- * Route für das Onboarding.
- * Verbindet den OnboardingScreen mit dem OnboardingViewModel.
- *
- * Diese Route ist der einzige Kontaktpunkt zwischen UI und ViewModel.
+* Route entry for onboarding that binds the screen to its ViewModel.
  */
 @Composable
 fun OnboardingRoute(
@@ -23,7 +20,7 @@ fun OnboardingRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Navigiere zur Hauptansicht, wenn Onboarding abgeschlossen
+    // Navigate to the main flow once onboarding is completed.
     LaunchedEffect(uiState.isCompleted) {
         if (uiState.isCompleted) {
             onOnboardingComplete()

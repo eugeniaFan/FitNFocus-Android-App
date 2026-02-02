@@ -1,7 +1,5 @@
 package com.example.fitnfocus.ui.goals.study
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +17,6 @@ import com.example.fitnfocus.viewmodel.SessionTimerViewModel
 /**
  * Inhalt für den Lernen-Bereich mit Navigation.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StudyNavigationHost(
     navState: LearningNavigationState,
@@ -36,7 +33,6 @@ fun StudyNavigationHost(
     onTopicClick: (LearningGoal, String) -> Unit,
     onTopicToggle: (Int, String, Boolean) -> Unit,
     onAddSessionForTopic: (LearningGoal, String) -> Unit,
-    onAddClick: () -> Unit,
     onSessionClick: (StudySession) -> Unit,
     onAddGoalClick: () -> Unit,
     onDeleteGoalClick: (LearningGoal) -> Unit,
@@ -46,7 +42,7 @@ fun StudyNavigationHost(
     onMarkTopicCompleted: (Int, String, Boolean) -> Unit,
     onTimerCompleted: (Int, Int, String, Boolean, String) -> Unit,  // sessionId, goalId, topic, markTopicCompleted, notes
     onTimerStopped: () -> Unit,  // Stop/Cancel → Dashboard
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     when (navState) {
         is LearningNavigationState.Overview -> {
@@ -144,14 +140,17 @@ fun StudyNavigationHost(
                 onCompleteSession = {
                     timerViewModel.completeSession {
                         // Nach DB-Operation: Navigation zum Focus-Bereich
-                        onTimerCompleted(navState.sessionId, navState.goalId, navState.topic, timerUiState.markTopicAsCompleted, timerUiState.sessionNotes)
+                        onTimerCompleted(
+                            navState.sessionId,
+                            navState.goalId,
+                            navState.topic,
+                            timerUiState.markTopicAsCompleted,
+                            timerUiState.sessionNotes
+                        )
                     }
                 },
                 onUpdateNotes = { timerViewModel.updateNotes(it) },
                 onUpdateMarkTopicCompleted = { timerViewModel.updateMarkTopicCompleted(it) },
-                onSessionCompleted = {
-                    // Dieser Callback wird jetzt nicht mehr benötigt da alles in onCompleteSession passiert
-                },
                 onAbort = {
                     // Stop/Cancel ohne Speichern → Dashboard
                     timerViewModel.cancelTimer()

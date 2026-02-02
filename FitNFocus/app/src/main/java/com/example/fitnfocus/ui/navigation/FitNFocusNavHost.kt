@@ -1,7 +1,5 @@
 package com.example.fitnfocus.ui.navigation
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -11,18 +9,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.fitnfocus.ui.focus.CollectionScreen
 import com.example.fitnfocus.ui.focus.FocusRoute
+import com.example.fitnfocus.ui.goals.study.timer.SessionTimerRoute
 import com.example.fitnfocus.ui.home.HomeScreen
 import com.example.fitnfocus.ui.onboarding.OnboardingRoute
 import com.example.fitnfocus.ui.profile.ProfileScreen
 import com.example.fitnfocus.ui.goals.study.StudyRoute
 import com.example.fitnfocus.viewmodel.StudyViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
+
 @Composable
 fun FitNFocusNavHost(
     navController: NavHostController,
     startDestination: String,
-    studyViewModel: StudyViewModel,  // Shared ViewModel für State-Persistenz
+    studyViewModel: StudyViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -30,11 +29,9 @@ fun FitNFocusNavHost(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        // ONBOARDING SCREEN
         composable(NavRoutes.Onboarding.route) {
             OnboardingRoute(
                 onOnboardingComplete = {
-                    // Nach dem Onboarding zur Home-Route navigieren und Onboarding aus Backstack entfernen
                     navController.navigate(NavRoutes.Home.route) {
                         popUpTo(NavRoutes.Onboarding.route) { inclusive = true }
                     }
@@ -42,23 +39,17 @@ fun FitNFocusNavHost(
             )
         }
 
-        // HOME SCREEN (Dashboard)
         composable(NavRoutes.Home.route) {
             HomeScreen(
                 onNavigateToProfile = {
                     navController.navigate(NavRoutes.Profile.route)
                 },
-                onNavigateToFocus = {
-                    navController.navigate(NavRoutes.Focus.route)
-                },
                 onStartSession = { sessionId ->
-                    // Direkt zum Focus-Screen mit Session-ID navigieren
-                    navController.navigate(NavRoutes.focusWithSession(sessionId))
+                    navController.navigate(NavRoutes.sessionTimer(sessionId))
                 }
             )
         }
 
-        // PROFILE SCREEN
         composable(NavRoutes.Profile.route) {
             ProfileScreen(
                 onNavigateBack = {
@@ -67,58 +58,55 @@ fun FitNFocusNavHost(
             )
         }
 
-        // FOCUS SCREEN (Timer & Sammelfiguren) mit sessionId Parameter
         composable(
-            route = NavRoutes.FOCUS_WITH_SESSION,
+            route = NavRoutes.SESSION_TIMER,
             arguments = listOf(
                 navArgument("sessionId") {
                     type = NavType.IntType
-                    defaultValue = -1  // -1 bedeutet: kein direkter Timer-Start
                 }
             )
         ) { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getInt("sessionId") ?: -1
-            FocusRoute(
-                autoStartSessionId = if (sessionId > 0) sessionId else null,
-                onNavigateToCollection = { navController.navigate(NavRoutes.Collection.route) },
+            val sessionId = backStackEntry.arguments?.getInt("sessionId") ?: return@composable
+            SessionTimerRoute(
+                sessionId = sessionId,
                 onSessionCompleted = {
-                    // Erfolgreiche Session → Focus-Bereich
                     navController.navigate(NavRoutes.Focus.route) {
                         popUpTo(NavRoutes.Home.route) { inclusive = false }
                         launchSingleTop = true
                     }
                 },
                 onSessionStopped = {
-                    // Stop/Cancel → Dashboard
                     navController.navigate(NavRoutes.Home.route) {
-                        popUpTo(NavRoutes.Home.route) { inclusive = false }
+                        popUpTo(NavRoutes.Home.route) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
             )
         }
 
-        // COLLECTION SCREEN
+        composable(NavRoutes.Focus.route) {
+            FocusRoute(
+                onNavigateToCollection = { navController.navigate(NavRoutes.Collection.route) }
+            )
+        }
+
         composable(NavRoutes.Collection.route) {
             CollectionScreen(
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // GOALS SCREEN
         composable(NavRoutes.Goals.route) {
             StudyRoute(
                 onBack = { navController.popBackStack() },
-                viewModel = studyViewModel,  // Shared ViewModel verwenden
+                viewModel = studyViewModel,
                 onSessionStopped = {
-                    // Bei Stop/Cancel: zum Dashboard navigieren
                     navController.navigate(NavRoutes.Home.route) {
                         popUpTo(NavRoutes.Home.route) { inclusive = false }
                         launchSingleTop = true
                     }
                 },
                 onSessionCompleted = {
-                    // Bei erfolgreicher Session: zum Focus-Bereich
                     navController.navigate(NavRoutes.Focus.route) {
                         popUpTo(NavRoutes.Home.route) { inclusive = false }
                         launchSingleTop = true

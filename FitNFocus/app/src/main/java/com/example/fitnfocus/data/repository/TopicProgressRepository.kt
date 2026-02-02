@@ -1,7 +1,7 @@
 package com.example.fitnfocus.data.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
+import com.example.fitnfocus.data.local.LearningGoalDao
 import com.example.fitnfocus.data.local.TopicProgressDao
 import com.example.fitnfocus.data.mapper.TopicProgressMapper
 import com.example.fitnfocus.domain.TopicProgress
@@ -10,57 +10,70 @@ import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
 /**
- * Repository für Topic-Fortschritt.
- * Verwaltet den Abschluss-Status von Topics unabhängig von Sessions.
- * Domain nutzt LocalDate, Entity nutzt epochDay.
+ * Repository class for managing topic progress data.
+ *
+ * This class provides an API for the app to interact with the topic progress data,
+ * including marking topics as completed, retrieving all completed topics, and
+ * checking if a specific topic is completed.
+ *
+ * @property topicProgressDao Data access object for topic progress data.
+ * @property learningGoalDao Data access object for learning goal data.
  */
 class TopicProgressRepository(
-    private val topicProgressDao: TopicProgressDao
+    private val topicProgressDao: TopicProgressDao,
+    private val learningGoalDao: LearningGoalDao
 ) {
 
     /**
-     * Prüft ob ein Topic abgeschlossen ist.
+     * Checks if a specific topic is completed under a given goal.
+     *
+     * @param goalId The ID of the goal.
+     * @param topicName The name of the topic.
+     * @return True if the topic is completed, false otherwise.
      */
     suspend fun isTopicCompleted(goalId: Int, topicName: String): Boolean {
         return topicProgressDao.isTopicCompleted(goalId, topicName) ?: false
     }
 
-
     /**
-     * Alle abgeschlossenen Topics (für Sammelfiguren-Feature).
+     * Retrieves all completed topics.
+     *
+     * @return A flow emitting a list of all completed topics.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun getAllCompletedTopics(): Flow<List<TopicProgress>> {
         return topicProgressDao.getAllCompletedTopics().map { entities ->
             entities.map { TopicProgressMapper.entityToDomain(it) }
         }
     }
 
-
     /**
-     * Markiert ein Topic als abgeschlossen.
+     * Marks a topic as completed or not completed.
+     *
+     * @param goalId The ID of the goal.
+     * @param topicName The name of the topic.
+     * @param isCompleted True to mark the topic as completed, false to mark it as not completed.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
+    // TODO Verify whether this flow is the right source for topic completion updates.
     suspend fun markTopicCompleted(
         goalId: Int,
         topicName: String,
         isCompleted: Boolean
     ) {
+        // Guard against orphaned progress updates when the goal was deleted.
+        val goalExists = learningGoalDao.getGoalById(goalId) != null
+        if (!goalExists) {
+            Log.e("TopicProgressRepo", "Attempted to mark progress for a non-existent goalId: $goalId")
+            return
+        }
 
         val existingEntity = topicProgressDao.getProgressForTopic(goalId, topicName)
 
         if (existingEntity != null) {
-            // Update bestehenden Domain-Zustand
             val existingDomain = TopicProgressMapper.entityToDomain(existingEntity)
 
             val completedAtStable = when {
-                // Wenn es schon ein Datum gibt: immer behalten
                 existingDomain.completedAt != null -> existingDomain.completedAt
-
-                // Wenn es noch kein Datum gibt, aber jetzt completed wird: heute setzen
                 isCompleted -> LocalDate.now()
-
-                // sonst (noch kein Datum, und wird nicht completed): bleibt null
                 else -> null
             }
 
@@ -70,9 +83,8 @@ class TopicProgressRepository(
             )
             updateProgress(domainProgress)
         } else {
-            // Neuen Domain-Zustand erzeugen
             val newDomain = TopicProgress(
-                id = 0, // wird von Room generiert
+                id = 0,
                 goalId = goalId,
                 topicName = topicName,
                 isCompleted = isCompleted,
@@ -82,28 +94,20 @@ class TopicProgressRepository(
         }
     }
 
-    /**
-     * Erstellt einen neuen Topic-Fortschritt.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun insertProgress(progress: TopicProgress): Long {
+    private suspend fun insertProgress(progress: TopicProgress): Long {
         return topicProgressDao.insertProgress(TopicProgressMapper.domainToEntity(progress))
     }
 
-    /**
-     * Aktualisiert einen Topic-Fortschritt.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun updateProgress(progress: TopicProgress) {
+    private suspend fun updateProgress(progress: TopicProgress) {
         topicProgressDao.updateProgress(TopicProgressMapper.domainToEntity(progress))
     }
 
-
     /**
-     * Löscht alle Fortschritte für ein Goal.
+     * Deletes progress for a specific goal.
+     *
+     * @param goalId The ID of the goal whose progress should be deleted.
      */
     suspend fun deleteProgressForGoal(goalId: Int) {
         topicProgressDao.deleteProgressForGoal(goalId)
     }
 }
-

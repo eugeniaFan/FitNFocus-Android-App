@@ -5,7 +5,7 @@ data class FocusTypeUi(
     val title: String,
     val subtitle: String,
     val description: String,
-    val iconRes: Int? = null // später Bilder
+    val iconRes: Int? = null
 )
 
 object FocusTypes {

@@ -13,9 +13,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun StudyRoute(
     onBack: () -> Unit,
-    viewModel: StudyViewModel,  // Shared ViewModel von FitNFocusApp
-    onSessionStopped: () -> Unit = {},  // Stop/Cancel → Dashboard
-    onSessionCompleted: () -> Unit = {} // Completed → Focus-Bereich
+    viewModel: StudyViewModel,
+    onSessionStopped: () -> Unit = {},
+    onSessionCompleted: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as FitNFocusApplication
@@ -31,11 +31,13 @@ fun StudyRoute(
                 StudyUiEvent.CloseAddDialog -> {
                     viewModel.setShowAddDialog(false)
                 }
+
                 is StudyUiEvent.ShowMessage -> {
                     scope.launch {
                         snackbarHostState.showSnackbar(event.message)
                     }
                 }
+
                 is StudyUiEvent.OpenCalendarInsert -> {
                     val intent = calendarExporter.buildInsertIntent(event.event)
                     context.startActivity(intent)
@@ -44,9 +46,7 @@ fun StudyRoute(
         }
     }
     StudyScreen(
-        onBack = onBack,
         viewModel = viewModel,
-        snackbarHostState = snackbarHostState,
         onSessionStopped = onSessionStopped,
         onSessionCompleted = onSessionCompleted
     )

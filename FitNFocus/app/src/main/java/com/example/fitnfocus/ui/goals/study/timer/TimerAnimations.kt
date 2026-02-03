@@ -15,11 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 /**
- * Wassertropfen-Animation während des Schmelzens.
+ * Water droplet animation during melting.
  */
 @Composable
 internal fun WaterDroplets(progress: Float) {
-    // Endlos-Animation rememberInfiniteTransition
     val infiniteTransition = rememberInfiniteTransition(label = "droplets")
 
     val dropletOffset by infiniteTransition.animateFloat(
@@ -53,7 +52,7 @@ internal fun WaterDroplets(progress: Float) {
 }
 
 /**
- * Formatiert Sekunden zu MM:SS.
+ * Formats seconds to MM:SS.
  */
 internal fun formatTime(seconds: Int): String {
     val mins = seconds / 60

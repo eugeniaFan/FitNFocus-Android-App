@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.MotivationType
 
 /**
- * Karte für Motivationstyp.
+ * Card for motivation type.
  */
 @Composable
 internal fun MotivationCard(motivationType: MotivationType) {
@@ -71,4 +71,3 @@ internal fun MotivationCard(motivationType: MotivationType) {
         }
     }
 }
-

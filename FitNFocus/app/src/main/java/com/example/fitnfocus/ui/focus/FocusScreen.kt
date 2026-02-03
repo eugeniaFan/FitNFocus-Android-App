@@ -21,11 +21,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.R
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.viewmodel.FocusViewModel
+import kotlinx.coroutines.delay
 
 
 /**
  * Focus screen showing collected coins and a preview of focus types.
- * Timer logic lives in SessionTimerRoute.
  */
 @Composable
 fun FocusScreen(
@@ -49,31 +49,26 @@ private fun FocusContent(
     coinsTotal: Int,
     onNavigateToCollection: () -> Unit,
 ) {
-    var lastCoins by remember { mutableStateOf(coinsTotal) }
-    var scaleTrigger by remember { mutableStateOf(false) }
+    var lastCoins by remember { mutableIntStateOf(coinsTotal) }
+
+    val shouldBounce = coinsTotal > lastCoins
 
     LaunchedEffect(coinsTotal) {
-        if (coinsTotal > lastCoins) {
-            scaleTrigger = true
+        if (shouldBounce) {
+            delay(150)
         }
         lastCoins = coinsTotal
     }
+
     // Scale animation emphasizes newly earned coins.
     val scale by animateFloatAsState(
-        targetValue = if (scaleTrigger) 1.2f else 1f,
+        targetValue = if (shouldBounce) 1.2f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
         ),
         label = "coinScale"
     )
-
-    LaunchedEffect(scaleTrigger) {
-        if (scaleTrigger) {
-            kotlinx.coroutines.delay(150)
-            scaleTrigger = false
-        }
-    }
 
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(Color(0xFFF5F1E8), Color(0xFFE6DAC8))
@@ -191,7 +186,7 @@ private fun FocusContent(
                         )
                     ) {
                         Text(
-                            "Zur Sammlung",
+                            text = "Zur Sammlung",
                             color = Color(0xFF34087A)
                         )
                     }
@@ -209,18 +204,18 @@ private fun FocusTypePreviewCard(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFFFFFFF)
+        shape = RoundedCornerShape(size = 14.dp),
+        color = Color(color = 0xFFFFFFFF)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(all = 12.dp)) {
             Text(
-                type.title,
+                text = type.title,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height( height = 12.dp))
             Text(
-                type.subtitle,
+                text = type.subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -160,7 +160,8 @@ internal fun GoalTimelineItem(
                     Spacer(modifier = Modifier.width(4.dp))
 
                     val dateText = if (goal.examDate != null) {
-                        val formatted = goal.examDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                        val formatted =
+                            goal.examDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
                         "Prüfung: $formatted"
                     } else {
                         " "
@@ -176,4 +177,3 @@ internal fun GoalTimelineItem(
         }
     }
 }
-

@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 /**
- * Control-Buttons je nach Timer-Status.
+ * Control buttons based on timer state.
  */
 @Composable
 internal fun TimerControls(
@@ -60,7 +60,7 @@ internal fun TimerControls(
         }
 
         TimerState.STOPPED -> {
-            // Dialog wird im Haupt-Screen angezeigt
+            // Dialog is shown in main screen
         }
     }
 }
@@ -79,7 +79,7 @@ private fun IdleControls(onStartTimer: () -> Unit) {
         ) {
             Icon(
                 Icons.Default.PlayArrow,
-                contentDescription = "Starten",
+                contentDescription = "Start",
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -165,4 +165,3 @@ private fun PausedControls(
         }
     }
 }
-

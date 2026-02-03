@@ -12,12 +12,12 @@ import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.viewmodel.SessionTimerViewModel
 
 /**
- * Route für den SessionTimerScreen.
- * Lädt Session-Daten und initialisiert das ViewModel.
+ * Route for SessionTimerScreen.
+ * Loads session data and initializes the ViewModel.
  *
- * @param sessionId Die ID der zu startenden Session
- * @param onSessionCompleted Callback wenn Session erfolgreich beendet → Focus-Bereich
- * @param onSessionStopped Callback wenn Session gestoppt/abgebrochen → Home
+ * @param sessionId ID of session to start
+ * @param onSessionCompleted Callback when session successfully completed -> Focus area
+ * @param onSessionStopped Callback when session stopped/aborted -> Home
  */
 @Composable
 fun SessionTimerRoute(
@@ -28,20 +28,20 @@ fun SessionTimerRoute(
 ) {
     val uiState by timerViewModel.uiState.collectAsState()
 
-    // Session-Daten laden und ViewModel initialisieren (EINMALIG beim Start)
+    // Load session data and initialize ViewModel (ONCE at start)
     LaunchedEffect(sessionId) {
         if (uiState.sessionId != sessionId) {
             timerViewModel.loadAndInitializeSession(sessionId)
         }
     }
 
-    // Zeige leeren Screen während Session geladen wird (verhindert Flicker)
+    // Show empty screen while session is loading (prevents flicker)
     if (uiState.sessionId == 0) {
         Box(Modifier.fillMaxSize())
         return
     }
 
-    // SessionTimerScreen rendern
+    // Render SessionTimerScreen
     SessionTimerScreen(
         uiState = uiState,
         onStartTimer = { timerViewModel.startTimer() },
@@ -50,29 +50,28 @@ fun SessionTimerRoute(
         onStopTimer = { timerViewModel.stopTimer() },
         onConfirmPartialSave = {
             timerViewModel.confirmPartialSave {
-                // Nach DB-Operation: Navigation zum Home
+                // After DB operation: Navigate to Home
                 onSessionStopped()
             }
         },
         onDismissPartialSave = {
             timerViewModel.dismissPartialSave {
-                // Nach Reset: Navigation zum Home
+                // After reset: Navigate to Home
                 onSessionStopped()
             }
         },
         onCompleteSession = {
             timerViewModel.completeSession {
-                // Nach DB-Operation: Navigation zum Focus-Bereich
+                // After DB operation: Navigate to Focus area
                 onSessionCompleted()
             }
         },
         onUpdateNotes = { timerViewModel.updateNotes(it) },
         onUpdateMarkTopicCompleted = { timerViewModel.updateMarkTopicCompleted(it) },
         onAbort = {
-            // Stop/Cancel ohne Speichern → Home
+            // Stop/Cancel without saving -> Home
             timerViewModel.cancelTimer()
             onSessionStopped()
         }
     )
 }
-

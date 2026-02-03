@@ -34,7 +34,7 @@ interface SessionDao {
         """
         SELECT * FROM study_session 
         WHERE topic = :topic AND goalId = :goalId ORDER BY epochDay DESC 
-    """
+        """
     )
     fun getSessionsForTopicFlow(topic: String, goalId: Int): Flow<List<StudySessionEntity>>
 
@@ -51,10 +51,23 @@ interface SessionDao {
     @Query("SELECT DISTINCT topic FROM study_session")
     suspend fun getAllTopicsWithSessions(): List<String>
 
-    @Query("SELECT * FROM study_session WHERE epochDay = :epochDay AND status = 'COMPLETED' ORDER BY id DESC")
+    @Query(
+        """
+        SELECT * FROM study_session 
+        WHERE epochDay = :epochDay
+        AND status = 'COMPLETED' 
+        ORDER BY id DESC
+        """
+    )
     suspend fun getCompletedSessionsByEpochDay(epochDay: Long): List<StudySessionEntity>
 
-    @Query("SELECT * FROM study_session WHERE status = 'PLANNED' ORDER BY epochDay ASC, id ASC")
+    @Query(
+        """
+        SELECT * FROM study_session 
+        WHERE status = 'PLANNED'    
+        ORDER BY epochDay ASC, id ASC
+    """
+    )
     suspend fun getAllPlannedSessions(): List<StudySessionEntity>
 
     @Query("UPDATE study_session SET status = :status WHERE id = :id")

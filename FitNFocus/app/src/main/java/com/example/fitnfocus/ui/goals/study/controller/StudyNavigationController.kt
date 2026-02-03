@@ -4,12 +4,13 @@ import com.example.fitnfocus.data.repository.LearningGoalRepository
 import com.example.fitnfocus.domain.FocusArea
 import com.example.fitnfocus.domain.LearningGoal
 import com.example.fitnfocus.ui.goals.study.LearningNavigationState
-import com.example.fitnfocus.ui.goals.study.overview.components.TopicStatusInteractor
+import com.example.fitnfocus.ui.goals.study.controller.TopicStatusInteractor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
 
 class StudyNavigationController(
     private val learningGoalRepository: LearningGoalRepository,

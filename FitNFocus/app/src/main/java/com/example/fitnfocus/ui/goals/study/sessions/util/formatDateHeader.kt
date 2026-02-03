@@ -3,17 +3,15 @@ package com.example.fitnfocus.ui.goals.study.sessions.util
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-// TODO AUFRAUMEN
+
 /**
- * DateFormatter für das deutsche Eingabeformat (dd.MM.yyyy).
- * Wird für Prüfungsdaten verwendet.
+ *
+ * DateFormatter for the German input format.(dd.MM.yyyy).
  */
 val GermanDateFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMAN)
 
-/**
- * Parst einen deutschen Datumsstring (dd.MM.yyyy) zu LocalDate.
- */
+
 fun parseGermanDate(dateString: String?): LocalDate? {
     if (dateString.isNullOrBlank()) return null
 
@@ -23,7 +21,7 @@ fun parseGermanDate(dateString: String?): LocalDate? {
 }
 
 /**
- * Formatiert ein LocalDate zum deutschen Format (dd.MM.yyyy).
+ * Formats a LocalDate to German format
  */
 fun formatGermanDate(date: LocalDate?): String {
     if (date == null) return ""
@@ -32,7 +30,7 @@ fun formatGermanDate(date: LocalDate?): String {
 }
 
 /**
- * Formatiert das Datum für die Anzeige als Header.
+ * Formats the date for display as a header
  */
 fun formatDateHeader(date: LocalDate): String {
     return try {

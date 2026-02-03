@@ -24,6 +24,7 @@ import androidx.room.PrimaryKey
         Index(value = ["topicName", "goalId"], unique = true)
     ]
 )
+
 data class TopicProgressEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val goalId: Int,
@@ -31,4 +32,3 @@ data class TopicProgressEntity(
     val isCompleted: Boolean = false,
     val completedAtEpochDay: Long? = null
 )
-

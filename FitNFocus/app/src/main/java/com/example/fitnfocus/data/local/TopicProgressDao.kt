@@ -55,7 +55,14 @@ interface TopicProgressDao {
     @Query("DELETE FROM topic_progress WHERE goalId = :goalId")
     suspend fun deleteProgressForGoal(goalId: Int)
 
-    @Query("UPDATE topic_progress SET isCompleted = :isCompleted, completedAtEpochDay = :completedAtEpochDay WHERE goalId = :goalId AND topicName = :topicName")
+    @Query(
+        """
+        UPDATE topic_progress 
+        SET isCompleted = :isCompleted, completedAtEpochDay = :completedAtEpochDay 
+        WHERE goalId = :goalId 
+        AND topicName = :topicName
+        """
+    )
     suspend fun updateCompletionStatus(
         goalId: Int,
         topicName: String,

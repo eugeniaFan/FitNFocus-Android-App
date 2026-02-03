@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.example.fitnfocus.data.mapper.LearningGoalMapper
 
-
 /**
  * Repository for learning goals.
  * Manages CRUD operations and maps between domain models and database entities.
  */
 class LearningGoalRepository(private val learningGoalDao: LearningGoalDao) {
 
+    // Getting all reactive updated goals
     fun getActiveGoals(): Flow<List<LearningGoal>> =
         learningGoalDao.getActiveGoals()
             .map { entities ->
@@ -20,7 +20,7 @@ class LearningGoalRepository(private val learningGoalDao: LearningGoalDao) {
             }
 
     suspend fun getGoalById(id: Int): LearningGoal? {
-        return learningGoalDao.getGoalById(id)?.let {  LearningGoalMapper.entityToDomain(it) }
+        return learningGoalDao.getGoalById(id)?.let { LearningGoalMapper.entityToDomain(it) }
     }
 
     suspend fun insertGoal(goal: LearningGoal): Long {

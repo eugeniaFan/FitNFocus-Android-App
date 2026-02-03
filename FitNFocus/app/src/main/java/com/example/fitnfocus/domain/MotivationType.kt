@@ -26,4 +26,3 @@ enum class MotivationType(val displayName: String, val description: String) {
         description = "Du arbeitest am besten mit anderen zusammen"
     )
 }
-

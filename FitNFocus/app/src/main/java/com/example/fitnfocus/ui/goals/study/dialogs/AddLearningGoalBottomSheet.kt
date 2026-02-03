@@ -42,7 +42,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * BottomSheet zum Hinzufügen eines neuen Lernziels (ähnlich wie Onboarding: Modul + Themen + Prüfungsdatum).
+ * Bottom sheet for creating a new learning goal.
+ *
+ * This sheet allows the user to:
+ * - Enter a module/course name
+ * - Select or type an exam date
+ * - Add and remove topics belonging to the goal
+ * - Persist the goal via an explicit save action
+ *
+ * All state is hoisted and controlled by the parent (ViewModel / Controller).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +85,7 @@ fun AddLearningGoalBottomSheet(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -187,6 +196,7 @@ fun AddLearningGoalBottomSheet(
                 modifier = Modifier.height(8.dp)
             )
 
+            // Save button: disabled while saving or when mandatory fields are empty.
             Button(
                 onClick = onSave,
                 modifier = Modifier
@@ -210,6 +220,7 @@ fun AddLearningGoalBottomSheet(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        // Convert selected millis to a local date and format it.
                         val millis = pickerState.selectedDateMillis
                         if (millis != null) {
                             val date = Instant.ofEpochMilli(millis)

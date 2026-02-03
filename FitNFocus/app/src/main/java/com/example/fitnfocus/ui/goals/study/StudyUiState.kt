@@ -7,16 +7,16 @@ import com.example.fitnfocus.domain.StudySession
  * Defines the screens shown within the study flow.
  */
 sealed class LearningNavigationState {
-    /** Overview of all learning goals. */
+    // Overview of all learning goals.
     data object Overview : LearningNavigationState()
 
-    /** Detail view for a learning goal with its topics. */
+    // Detail view for a learning goal with its topics.
     data class GoalDetail(val goalId: Int) : LearningNavigationState()
 
-    /** Session list for a specific topic. */
+    // Session list for a specific topic.
     data class TopicDetail(val goalId: Int, val topic: String) : LearningNavigationState()
 
-    /** Timer screen for an active session. */
+    // Timer screen for an active session.
     data class SessionTimer(
         val goalId: Int,
         val topic: String,
@@ -30,13 +30,13 @@ sealed class LearningNavigationState {
  * Status of a topic based on sessions and topic progress.
  */
 enum class TopicStatus {
-    /** No session created for this topic yet */
+    // No session created for this topic yet
     NOT_STARTED,
 
-    /** At least one session created, but topic not completed */
+    // At least one session created, but topic not completed
     IN_PROGRESS,
 
-    /** Topic marked as completed */
+    // Topic marked as completed
     COMPLETED
 }
 

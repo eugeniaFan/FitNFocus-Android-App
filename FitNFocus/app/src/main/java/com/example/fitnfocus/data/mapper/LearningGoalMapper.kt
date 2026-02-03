@@ -11,6 +11,7 @@ import java.time.LocalDate
 object LearningGoalMapper {
 
     fun entityToDomain(entity: LearningGoalEntity): LearningGoal {
+
         val topicsList: List<String> = if (entity.topics.isNotBlank()) {
             entity.topics.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         } else {

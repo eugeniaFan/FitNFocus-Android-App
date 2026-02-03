@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Kompakte Anzeige eines Lernziels.
+ * Compact display of a learning goal.
  */
 @Composable
 internal fun LearningGoalItem(

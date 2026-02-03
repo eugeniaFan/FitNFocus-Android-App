@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Karte für Persönlichkeitsprofil mit Slidern.
+ * Card for personality profile with sliders.
  */
 @Composable
 internal fun PersonalityProfileCard(
@@ -57,7 +57,7 @@ internal fun PersonalityProfileCard(
 }
 
 /**
- * Einzelne Präferenz-Anzeige mit Balken.
+ * Single preference display with bar.
  */
 @Composable
 private fun PreferenceBar(
@@ -102,4 +102,3 @@ private fun PreferenceBar(
         )
     }
 }
-

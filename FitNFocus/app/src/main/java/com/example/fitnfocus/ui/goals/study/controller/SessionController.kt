@@ -10,7 +10,7 @@ import com.example.fitnfocus.ui.goals.study.LearningNavigationState
 import com.example.fitnfocus.ui.goals.study.SessionDialogUiState
 import com.example.fitnfocus.ui.goals.study.StudyUiEvent
 import com.example.fitnfocus.ui.goals.study.TopicItem
-import com.example.fitnfocus.ui.goals.study.overview.components.TopicStatusInteractor
+import com.example.fitnfocus.ui.goals.study.controller.TopicStatusInteractor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,7 +30,6 @@ class SessionController (
     private val learningGoalRepository: LearningGoalRepository,
     private val topicStatusInteractor: TopicStatusInteractor,
     private val scope: CoroutineScope,
-    private val getNavState: () -> LearningNavigationState,
     private val uiEvents: MutableSharedFlow<StudyUiEvent>,
     private val setNavState: (LearningNavigationState) -> Unit
 ) {
@@ -47,11 +46,10 @@ class SessionController (
     val selectedSession: StateFlow<StudySession?> = _selectedSession.asStateFlow()
 
     private val _lastSavedSession = MutableStateFlow<StudySession?>(null)
-    val lastSavedSession: StateFlow<StudySession?> = _lastSavedSession.asStateFlow()
 
     private val _selectedTopicKey = MutableStateFlow<GoalTopicKey?>(null)
 
-    // automatisch aktualisierte Sessions für TopicDetail
+    // Auto-updated sessions for TopicDetail
     @OptIn(ExperimentalCoroutinesApi::class)
     val topicSessions: StateFlow<List<StudySession>> =
         _selectedTopicKey
@@ -62,7 +60,7 @@ class SessionController (
                     sessionRepository.getSessionsForTopicFlow(key.topic, key.goalId)
                 }
             }
-            .stateIn(scope, SharingStarted.Companion.WhileSubscribed(5_000), emptyList())
+            .stateIn(scope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun setShowAddDialog(value: Boolean) {
         if (value) _dialogState.update { it.copy(showAddDialog = true) }
@@ -97,7 +95,7 @@ class SessionController (
             try {
                 _todaySessions.value = sessionRepository.getSessionsByDate(date)
             } catch (e: Exception) {
-                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message ?: "Fehler beim Laden der Sessions."))
+                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message ?: "Error loading sessions."))
             } finally {
                 _isLoading.value = false
             }
@@ -108,15 +106,12 @@ class SessionController (
         scope.launch {
             sessionRepository.updateSessionStatus(sessionId, status)
             loadSessionsForDate(LocalDate.now())
-            // topicSessions aktualisiert sich automatisch über Flow
         }
     }
 
     fun updateSessionNotes(sessionId: Int, notes: String) {
         scope.launch {
             sessionRepository.updateSessionNotes(sessionId, notes)
-            // Optional: lokales UI-Update, damit es nicht “verschwindet”
-            // topicSessions kommt aus DB-Flow, daher normalerweise stabil.
         }
     }
 
@@ -127,9 +122,9 @@ class SessionController (
                 sessionRepository.updateSession(session)
                 _todaySessions.value = sessionRepository.getSessionsByDate(session.date)
                 _selectedSession.value = null
-                uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session aktualisiert."))
+                uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session updated."))
             } catch (e: Exception) {
-                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message?: "Aktualisierung fehlgeschlagen."))
+                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message?: "Update failed."))
             } finally {
                 _isLoading.value = false
             }
@@ -141,11 +136,11 @@ class SessionController (
             _isLoading.value = true
             try {
                 sessionRepository.deleteSession(session)
-                uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session gelöscht."))
+                uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session deleted."))
                 _todaySessions.value = sessionRepository.getSessionsByDate(session.date)
                 _selectedSession.value = null
             } catch (e: Exception) {
-                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message?:"Löschen fehlgeschlagen."))
+                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message?:"Delete failed."))
             } finally {
                 _isLoading.value = false
             }
@@ -158,11 +153,11 @@ class SessionController (
         val today = LocalDate.now()
 
         if (cleanedTopic.isEmpty()) {
-            uiEvents.tryEmit(StudyUiEvent.ShowMessage("Bitte ein Thema eingeben."))
+            uiEvents.tryEmit(StudyUiEvent.ShowMessage("Please enter a topic."))
             return
         }
         if (durationMinutes <= 0) {
-            uiEvents.tryEmit(StudyUiEvent.ShowMessage("Bitte eine gültige Dauer eingeben."))
+            uiEvents.tryEmit(StudyUiEvent.ShowMessage("Please enter a valid duration."))
             return
         }
 
@@ -186,8 +181,8 @@ class SessionController (
                 topicStatusInteractor.markInProgress(cleanedTopic)
 
                 val moduleName = if (goalId != null) {
-                    learningGoalRepository.getGoalById(goalId)?.moduleName ?: "Lernen"
-                } else "Lernen"
+                    learningGoalRepository.getGoalById(goalId)?.moduleName ?: "Learning"
+                } else "Learning"
 
                 _dialogState.value = SessionDialogUiState()
                 _lastSavedSession.value = session.copy(id = sessionId)
@@ -206,43 +201,22 @@ class SessionController (
                         )
                     )
                 } else {
-                    uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session gespeichert."))
+                    uiEvents.tryEmit(StudyUiEvent.ShowMessage("Session saved."))
                 }
 
                 if (addToCalendar) {
                     uiEvents.emit(StudyUiEvent.OpenCalendarInsert(session.toCalendarEventDataNow()))
                 }
             } catch (e: Exception) {
-                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message?: "Speichern fehlgeschlagen."))
+                uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message?: "Save failed."))
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun navigateToTimer(session: StudySession) {
-        scope.launch {
-            val goalId = session.goalId
-            val moduleName = if (goalId != null) {
-                learningGoalRepository.getGoalById(goalId)?.moduleName ?: "Lernen"
-            } else "Lernen"
-
-            setNavState(
-                LearningNavigationState.SessionTimer(
-                    goalId = goalId ?: 0,
-                    topic = session.topic,
-                    moduleName = moduleName,
-                    durationMinutes = session.durationMinutes,
-                    sessionId = session.id
-                )
-            )
-        }
-    }
-
     /**
-     * Wird nach Timer-Completion aufgerufen.
-     * WICHTIG: Keine DB-Updates hier
-     * Nur UI refresh + Navigation.
+     * Called after timer completion.
      */
     fun onTimerCompletedReturnToTopic(goalId: Int, topic: String) {
         setNavState(LearningNavigationState.TopicDetail(goalId = goalId, topic = topic))
@@ -250,9 +224,4 @@ class SessionController (
         loadSessionsForDate(LocalDate.now())
     }
 
-    fun onTimerStoppedReturnToOverview() {
-        setNavState(LearningNavigationState.Overview)
-        clearTopicDetail()
-        loadSessionsForDate(LocalDate.now())
-    }
 }

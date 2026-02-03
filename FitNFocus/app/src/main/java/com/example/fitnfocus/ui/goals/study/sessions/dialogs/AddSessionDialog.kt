@@ -31,9 +31,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 /**
- * Dialog zum Hinzufügen einer neuen Focus Session.
- * Thema wird angezeigt aber ist nicht bearbeitbar.
- * Nur die Dauer kann eingegeben werden.
+ * Dialog for adding a new Focus Session.
+ * Topic is displayed but not editable.
+ * Only the duration can be entered.
  */
 @Composable
 fun AddSessionDialog(
@@ -55,7 +55,7 @@ fun AddSessionDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Thema-Anzeige (nicht bearbeitbar)
+                // Topic display (not editable)
                 OutlinedTextField(
                     value = topic,
                     onValueChange = { },
@@ -68,7 +68,7 @@ fun AddSessionDialog(
                     singleLine = true
                 )
 
-                // Dauer-Eingabe
+                // Duration input
                 OutlinedTextField(
                     value = duration,
                     onValueChange = { duration = it },
@@ -81,7 +81,7 @@ fun AddSessionDialog(
                     singleLine = true
                 )
 
-                // Kalender-Option
+                // Calendar option
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

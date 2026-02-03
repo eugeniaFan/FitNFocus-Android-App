@@ -15,7 +15,8 @@ object AppViewModelProvider {
 
     val Factory = viewModelFactory {
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             StudyViewModel(
                 app.container.sessionRepository,
                 app.container.learningGoalRepository,
@@ -25,25 +26,27 @@ object AppViewModelProvider {
         }
 
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             HomeViewModel(
-                app.container.sessionRepository,
                 app.container.userPreferencesRepository,
+                app.container.sessionRepository,
                 app.container.learningGoalRepository,
                 app.container.topicProgressRepository
             )
         }
 
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             FocusViewModel(
-                app.container.sessionRepository,
-                app.container.learningGoalRepository
+                app.container.sessionRepository
             )
         }
 
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             SessionTimerViewModel(
                 app.container.sessionRepository,
                 app.container.learningGoalRepository,
@@ -52,7 +55,8 @@ object AppViewModelProvider {
         }
 
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             OnboardingViewModel(
                 app.container.userPreferencesRepository,
                 app.container.learningGoalRepository
@@ -60,7 +64,8 @@ object AppViewModelProvider {
         }
 
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             ProfileViewModel(
                 app.container.userPreferencesRepository,
                 app.container.learningGoalRepository,
@@ -69,7 +74,8 @@ object AppViewModelProvider {
         }
 
         initializer {
-            val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
+            val app =
+                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FitNFocusApplication
             MainViewModel(app.container.userPreferencesRepository)
         }
     }

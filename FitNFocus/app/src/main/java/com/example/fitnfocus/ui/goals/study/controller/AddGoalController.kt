@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * Controller for the Add-Goal flow.
+ *
+ * Keeps all add-goal UI state in a single StateFlow and coordinates repository calls.
+ */
 class AddGoalController (
     private val learningGoalRepository: LearningGoalRepository,
     private val scope: CoroutineScope,
@@ -25,6 +30,7 @@ class AddGoalController (
     }
 
     fun close() {
+        // Reset to defaults when the sheet is dismissed.
         _state.value = AddGoalUiState()
     }
 
@@ -44,6 +50,7 @@ class AddGoalController (
         val topic = _state.value.currentTopic.trim()
         if (topic.isEmpty()) return
 
+        // Prevent duplicates by case-insensitive match, then clear the input.
         if (_state.value.topics.any { it.equals(topic, ignoreCase = true) }) {
             _state.update { it.copy(currentTopic = "") }
             return
@@ -56,12 +63,20 @@ class AddGoalController (
         _state.update { it.copy(topics = it.topics - topic) }
     }
 
+    /**
+     * Persists the current goal and navigates back to the overview.
+     */
     fun save() {
         scope.launch {
             val s = _state.value
             val module = s.moduleName.trim()
-            if (module.isEmpty()) return@launch // TODO Überarbeiten
+            if (module.isEmpty()) {
+                _state.tryEmit(AddGoalUiState(showSheet = true))
+            } else {
+                _state.update { it.copy(isSaving = true) }
+            }
 
+            // Use a loading flag to disable inputs while saving.
             _state.update { it.copy(isSaving = true) }
             try {
                 val examDate = parseGermanDate(s.examDateText)

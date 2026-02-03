@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.goals.study.overview.components
+package com.example.fitnfocus.ui.goals.study.controller
 
 import com.example.fitnfocus.data.repository.SessionRepository
 import com.example.fitnfocus.data.repository.TopicProgressRepository

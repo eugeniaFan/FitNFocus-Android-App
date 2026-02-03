@@ -20,21 +20,19 @@ import androidx.compose.ui.unit.sp
 import com.example.fitnfocus.R
 
 /**
- * Timer-Screen für eine Focus-Session mit Eiswürfel-Schmelz-Animation.
+ * Timer-Screen for Focus-Session with ice cube melting animation.
  *
- * Refactored: Verwendet jetzt SessionTimerViewModel statt lokalen State.
- *
- * @param uiState Der aktuelle UI-State vom SessionTimerViewModel
- * @param onStartTimer Callback zum Starten des Timers
- * @param onPauseTimer Callback zum Pausieren des Timers
- * @param onResumeTimer Callback zum Fortsetzen des Timers
- * @param onStopTimer Callback zum vorzeitigen Stoppen (Partial Completion)
- * @param onConfirmPartialSave Callback wenn User im Dialog "Speichern" wählt
- * @param onDismissPartialSave Callback wenn User im Dialog "Verwerfen" wählt
- * @param onCompleteSession Callback wenn User Session abschließt (nach FINISHED) - enthält DB-Speicherung + Navigation
- * @param onUpdateNotes Callback für Notizen-Änderungen
- * @param onUpdateMarkTopicCompleted Callback für Checkbox-Änderungen
- * @param onAbort Callback zum Abbrechen ohne Speichern
+ * @param uiState Current UI state from SessionTimerViewModel
+ * @param onStartTimer Callback to start timer
+ * @param onPauseTimer Callback to pause timer
+ * @param onResumeTimer Callback to resume timer
+ * @param onStopTimer Callback to stop early (partial completion)
+ * @param onConfirmPartialSave Callback when user chooses "Save" in dialog
+ * @param onDismissPartialSave Callback when user chooses "Discard" in dialog
+ * @param onCompleteSession Callback when user completes session (after FINISHED) - includes DB save + navigation
+ * @param onUpdateNotes Callback for notes changes
+ * @param onUpdateMarkTopicCompleted Callback for checkbox changes
+ * @param onAbort Callback to cancel without saving
  */
 @Composable
 fun SessionTimerScreen(
@@ -51,7 +49,7 @@ fun SessionTimerScreen(
     onAbort: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Animations für Eiswürfel (Schmelzen von oben nach unten)
+    // Animations for ice cube (melting from top to bottom)
     val iceScale by animateFloatAsState(
         targetValue = if (uiState.timerState == TimerState.FINISHED) 0f else 1f - (uiState.progress * 0.7f),
         animationSpec = tween(durationMillis = 500),
@@ -70,7 +68,7 @@ fun SessionTimerScreen(
         label = "iceOffsetY"
     )
 
-    // Animation für die Sammelfigur (erscheint wenn Timer fertig)
+    // Animation for collectible (appears when timer finishes)
     val coinScale by animateFloatAsState(
         targetValue = if (uiState.timerState == TimerState.FINISHED) 1f else 0f,
         animationSpec = spring(
@@ -86,7 +84,7 @@ fun SessionTimerScreen(
         label = "coinAlpha"
     )
 
-    // Pulsierender Effekt für die Münze
+    // Pulsing effect for coin
     val infiniteTransition = rememberInfiniteTransition(label = "coinPulse")
     val coinPulse by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -98,13 +96,13 @@ fun SessionTimerScreen(
         label = "coinPulseAnim"
     )
 
-    // Hintergrund-Gradient basierend auf Zustand
+    // Background gradient based on state
     val backgroundGradient = Brush.verticalGradient(
         colors = listOf(
             if (uiState.timerState == TimerState.FINISHED)
-                Color(0xFFFFF8E1) // Warmes Gelb wenn fertig
+                Color(0xFFFFF8E1) // Warm yellow when finished
             else
-                Color(0xFFE3F2FD), // Kühles Blau während Timer
+                Color(0xFFE3F2FD), // Cool blue during timer
             if (uiState.timerState == TimerState.FINISHED)
                 Color(0xFFFFECB3)
             else
@@ -144,32 +142,32 @@ fun SessionTimerScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Haupt-Animation Bereich
+            // Main animation area
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                // Eiswürfel (schmelzt)
+                // Ice cube (melting)
                 if (uiState.timerState != TimerState.FINISHED) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_ice_cube),
                         contentDescription = "Schmelzender Eiswürfel",
                         modifier = Modifier
-                            .size(320.dp)
+                            .size(220.dp)
                             .scale(iceScale)
                             .alpha(iceAlpha)
                             .offset(y = iceOffsetY.dp)
                     )
 
-                    // Wassertropfen-Effekt (optisch)
+                    // Water droplet effect (visual)
                     if (uiState.progress > 0.2f && uiState.timerState == TimerState.RUNNING) {
                         WaterDroplets(progress = uiState.progress)
                     }
                 }
 
-                // Sammelfigur (erscheint wenn fertig)
+                // Collectible (appears when finished)
                 if (uiState.timerState == TimerState.FINISHED) {
                     FinishedReward(
                         coinScale = coinScale,
@@ -181,7 +179,7 @@ fun SessionTimerScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Timer-Anzeige
+            // Timer display
             TimerDisplay(
                 remainingSeconds = uiState.remainingSeconds,
                 timerState = uiState.timerState
@@ -189,7 +187,7 @@ fun SessionTimerScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Control-Buttons basierend auf Status
+            // Control buttons based on state
             TimerControls(
                 timerState = uiState.timerState,
                 sessionTopic = uiState.sessionTopic,

@@ -35,9 +35,13 @@ import java.time.format.DateTimeFormatter
 
 
 /**
- * Detailansicht eines einzelnen Lernziels mit allen Themen.
+ * Displays the details of a single learning goal including its topics and progress.
+ *
+ * Responsibilities:
+ * - Shows module title, optional exam date, and progress summary.
+ * - Renders a timeline-like topic list with status indicators.
+ * - Delegates navigation/actions via callbacks (back, edit, topic click, topic toggle).
  */
-
 @Composable
 fun GoalDetailScreen(
     modifier: Modifier = Modifier,
@@ -110,7 +114,7 @@ fun GoalDetailScreen(
             }
         }
 
-        // Fortschritts-Card
+        // Progress summary card.
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -194,7 +198,7 @@ fun GoalDetailScreen(
             ) {
 
                 itemsIndexed(
-                     goal.topics
+                    goal.topics
                 ) { index, topic ->
                     val isCompleted = topicProgress[topic] == true
                     val topicStatus = topicStatusMap[topic] ?: TopicStatus.NOT_STARTED
@@ -308,7 +312,8 @@ private fun TopicTimelineItem(
                         tint = circleIconTint
                     )
 
-                    TopicStatus.NOT_STARTED -> { /* Leerer Kreis */
+                    TopicStatus.NOT_STARTED -> {
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }

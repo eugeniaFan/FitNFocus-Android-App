@@ -28,7 +28,7 @@ import com.example.fitnfocus.ui.theme.SurfaceWhite
 import com.example.fitnfocus.ui.theme.TextSecondary
 
 /**
- * Horizontale scrollbare Liste der Fokus-Bereiche.
+ * Horizontal scrollable list of focus areas.
  */
 @Composable
 fun FocusAreaSelector(
@@ -61,7 +61,7 @@ fun FocusAreaSelector(
             }
         }
 
-        // Rechts-Fade
+        // Right fade
         if (scrollState.canScrollForward) {
             Box(
                 modifier = Modifier
@@ -79,7 +79,7 @@ fun FocusAreaSelector(
             )
         }
 
-        // Links-Fade
+        // Left fade
         if (scrollState.canScrollBackward) {
             Box(
                 modifier = Modifier
@@ -100,7 +100,7 @@ fun FocusAreaSelector(
 }
 
 /**
- * Einzelner Fokus-Bereich als kreisförmige Card.
+ * Single focus area as a circular card.
  */
 @Composable
 private fun FocusAreaItem(
@@ -155,4 +155,3 @@ private fun FocusAreaItem(
         )
     }
 }
-

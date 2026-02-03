@@ -1,4 +1,4 @@
-package com.example.fitnfocus.ui.common
+package com.example.fitnfocus.ui.goals.study.sessions.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable

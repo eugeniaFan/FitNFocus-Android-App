@@ -40,4 +40,3 @@ class SetTopicCompletionUseCase(
         return topicProgressRepository.isTopicCompleted(goalId, topicName)
     }
 }
-

@@ -56,7 +56,7 @@ fun SummaryStep(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Zusammenfassung
+        // Summary card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -83,7 +83,7 @@ fun SummaryStep(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Datenschutz-Hinweis
+        // Privacy policy
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)

@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Card für Session-Abschluss (nach FINISHED).
+ * Card for session completion (after FINISHED).
  */
 @Composable
 internal fun CompletionCard(

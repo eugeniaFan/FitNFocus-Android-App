@@ -31,7 +31,6 @@ class SessionRepository(
         }
     }
 
-
     fun getSessionsForTopicFlow(topic: String, goalId: Int): Flow<List<StudySession>> {
         return sessionDao.getSessionsForTopicFlow(topic, goalId)
             .map { list ->
@@ -43,20 +42,6 @@ class SessionRepository(
         return sessionDao.hasSessionsForTopic(topic, goalId)
     }
 
-
-    suspend fun getAllPlannedSessions(): List<StudySession> {
-        val entities = sessionDao.getAllPlannedSessions()
-        return entities.map { entity -> SessionMapper.entityToDomain(entity) }
-    }
-
-    // TODO Consider using this for date-sorted history if it is not already provided elsewhere.
-    suspend fun getCompletedSessionsByDate(date: LocalDate): List<StudySession> {
-        val entities = sessionDao.getCompletedSessionsByEpochDay(date.toEpochDay())
-        return entities.map { entity -> SessionMapper.entityToDomain(entity) }
-    }
-
-
-    // TODO Verify whether this is still needed and why it is unused.
     suspend fun updateSessionStatus(sessionId: Int, status: SessionStatus) {
         sessionDao.updateSessionStatus(sessionId, status.name)
     }

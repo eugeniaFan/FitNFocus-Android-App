@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Sektion mit Titel.
+ * Section with title.
  */
 @Composable
 internal fun ProfileSection(

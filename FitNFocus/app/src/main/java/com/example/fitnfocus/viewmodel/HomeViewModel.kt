@@ -26,8 +26,8 @@ import java.time.LocalDate
  * Provides dashboard UI state and handles user actions for sessions and topics.
  */
 class HomeViewModel(
-    private val sessionRepository: SessionRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val sessionRepository: SessionRepository,
     private val learningGoalRepository: LearningGoalRepository,
     private val topicProgressRepository: TopicProgressRepository
 ) : ViewModel() {

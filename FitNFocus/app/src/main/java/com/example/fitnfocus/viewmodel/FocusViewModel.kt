@@ -2,7 +2,6 @@ package com.example.fitnfocus.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fitnfocus.data.repository.LearningGoalRepository
 import com.example.fitnfocus.data.repository.SessionRepository
 import com.example.fitnfocus.domain.SessionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +16,6 @@ import java.time.LocalDate
  */
 class FocusViewModel(
     private val sessionRepository: SessionRepository,
-    private val learningGoalRepository: LearningGoalRepository,
 ) : ViewModel() {
 
     private val _completedSessionsCount = MutableStateFlow(0)

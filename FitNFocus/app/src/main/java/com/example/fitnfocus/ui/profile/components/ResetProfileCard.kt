@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * Karte mit Reset-Button für das Profil.
+ * Card with reset button for the profile.
  */
 @Composable
 internal fun ResetProfileCard(

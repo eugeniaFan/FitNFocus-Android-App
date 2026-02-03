@@ -44,7 +44,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * BottomSheet zum Bearbeiten eines bestehenden Lernziels.
+ * Bottom sheet for editing an existing learning goal.
+ *
+ * Notes:
+ * - All input state is hoisted and controlled by the parent (ViewModel / Controller).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -197,6 +200,7 @@ fun EditLearningGoalBottomSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Save button: disabled while saving or when mandatory fields are empty.
             Button(
                 onClick = onSave,
                 modifier = Modifier
@@ -211,8 +215,6 @@ fun EditLearningGoalBottomSheet(
         }
     }
 
-    // TODO Überprüfen diese Datum Prüfung mit dem Formater richtig ist?
-    //  Ob es nicht eine bestehenede Funktion gibt die verwendet werden kann
     if (showDatePicker.value) {
         val pickerState = rememberDatePickerState()
         DatePickerDialog(
@@ -240,4 +242,3 @@ fun EditLearningGoalBottomSheet(
         }
     }
 }
-

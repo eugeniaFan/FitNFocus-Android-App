@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun StudyRoute(
-    onBack: () -> Unit,
     viewModel: StudyViewModel,
     onSessionStopped: () -> Unit = {},
     onSessionCompleted: () -> Unit = {}
@@ -24,7 +23,7 @@ fun StudyRoute(
     val scope = rememberCoroutineScope()
 
 
-    // Events zentral sammeln (einmal pro Route)
+    // Collect events centrally (once per route)
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { event ->
             when (event) {

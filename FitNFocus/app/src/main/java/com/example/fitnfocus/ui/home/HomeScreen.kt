@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.domain.SessionStatus
-import com.example.fitnfocus.ui.common.toPresentation
+import com.example.fitnfocus.ui.goals.study.sessions.components.toPresentation
 import com.example.fitnfocus.viewmodel.HomeViewModel
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.filled.Pause

@@ -12,7 +12,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 
 /**
- * Bestätigungs-Dialog zum Zurücksetzen des Profils.
+ * Confirmation dialog for resetting the profile.
  */
 @Composable
 internal fun ResetProfileDialog(
@@ -55,4 +55,3 @@ internal fun ResetProfileDialog(
         }
     )
 }
-

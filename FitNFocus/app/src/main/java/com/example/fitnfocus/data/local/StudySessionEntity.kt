@@ -25,6 +25,7 @@ import androidx.room.PrimaryKey
         Index(value = ["epochDay"])
     ]
 )
+
 data class StudySessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val topic: String,

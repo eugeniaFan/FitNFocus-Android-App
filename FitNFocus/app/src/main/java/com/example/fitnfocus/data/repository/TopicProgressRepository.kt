@@ -41,9 +41,12 @@ class TopicProgressRepository(
      * @return A flow emitting a list of all completed topics.
      */
     fun getAllCompletedTopics(): Flow<List<TopicProgress>> {
-        return topicProgressDao.getAllCompletedTopics().map { entities ->
-            entities.map { TopicProgressMapper.entityToDomain(it) }
-        }
+        return topicProgressDao.getAllCompletedTopics()
+            .map { entities ->
+                entities.map {
+                    TopicProgressMapper.entityToDomain(entity = it)
+                }
+            }
     }
 
     /**
@@ -53,7 +56,6 @@ class TopicProgressRepository(
      * @param topicName The name of the topic.
      * @param isCompleted True to mark the topic as completed, false to mark it as not completed.
      */
-    // TODO Verify whether this flow is the right source for topic completion updates.
     suspend fun markTopicCompleted(
         goalId: Int,
         topicName: String,
@@ -62,7 +64,10 @@ class TopicProgressRepository(
         // Guard against orphaned progress updates when the goal was deleted.
         val goalExists = learningGoalDao.getGoalById(goalId) != null
         if (!goalExists) {
-            Log.e("TopicProgressRepo", "Attempted to mark progress for a non-existent goalId: $goalId")
+            Log.e(
+                "TopicProgressRepo",
+                "Attempted to mark progress for a non-existent goalId: $goalId"
+            )
             return
         }
 
@@ -94,12 +99,12 @@ class TopicProgressRepository(
         }
     }
 
-    private suspend fun insertProgress(progress: TopicProgress): Long {
-        return topicProgressDao.insertProgress(TopicProgressMapper.domainToEntity(progress))
-    }
-
     private suspend fun updateProgress(progress: TopicProgress) {
         topicProgressDao.updateProgress(TopicProgressMapper.domainToEntity(progress))
+    }
+
+    private suspend fun insertProgress(progress: TopicProgress): Long {
+        return topicProgressDao.insertProgress(TopicProgressMapper.domainToEntity(progress))
     }
 
     /**
@@ -110,4 +115,5 @@ class TopicProgressRepository(
     suspend fun deleteProgressForGoal(goalId: Int) {
         topicProgressDao.deleteProgressForGoal(goalId)
     }
+
 }

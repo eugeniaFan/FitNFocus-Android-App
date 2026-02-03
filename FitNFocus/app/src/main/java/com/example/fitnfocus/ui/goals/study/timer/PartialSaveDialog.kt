@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Dialog für "Partial Completion" (vorzeitiges Stoppen).
+ * Dialog for "Partial Completion" (early stop).
  */
 @Composable
 internal fun PartialSaveDialog(

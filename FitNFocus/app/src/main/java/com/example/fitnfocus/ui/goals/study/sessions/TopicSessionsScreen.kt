@@ -35,7 +35,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 /**
- * Sessions für ein bestimmtes Topic mit Datumsgruppierung.
+ * Sessions for a specific topic with date grouping.
  */
 @Composable
 fun TopicSessionsScreen(
@@ -53,14 +53,14 @@ fun TopicSessionsScreen(
     modifier: Modifier = Modifier
 ) {
 
-    // Gruppiere Sessions nach Datum
+    // Group sessions by date
     val sessionsByDate = sessions.groupBy { it.date }
 
     Spacer(modifier = Modifier.height(28.dp))
     Column(
         modifier = modifier.testTag("screen_topic_sessions")
     ) {
-        // Header
+        
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -159,7 +159,7 @@ fun TopicSessionsScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Sessions nach Datum gruppiert anzeigen
+                // Display sessions grouped by date
                 sessionsByDate.forEach { (date, dateSessions) ->
                     item {
                         Text(

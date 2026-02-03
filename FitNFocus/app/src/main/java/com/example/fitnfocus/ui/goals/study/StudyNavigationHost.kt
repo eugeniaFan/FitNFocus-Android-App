@@ -15,7 +15,7 @@ import com.example.fitnfocus.ui.goals.study.timer.SessionTimerUiState
 import com.example.fitnfocus.viewmodel.SessionTimerViewModel
 
 /**
- * Inhalt für den Lernen-Bereich mit Navigation.
+ * Content for the learning area with navigation.
  */
 @Composable
 fun StudyNavigationHost(
@@ -41,12 +41,12 @@ fun StudyNavigationHost(
     onUpdateSessionNotes: (Int, String) -> Unit,
     onMarkTopicCompleted: (Int, String, Boolean) -> Unit,
     onTimerCompleted: (Int, Int, String, Boolean, String) -> Unit,  // sessionId, goalId, topic, markTopicCompleted, notes
-    onTimerStopped: () -> Unit,  // Stop/Cancel → Dashboard
+    onTimerStopped: () -> Unit,  // Stop/Cancel -> Navigate to Dashboard
     modifier: Modifier = Modifier,
 ) {
     when (navState) {
         is LearningNavigationState.Overview -> {
-            // Übersicht aller Lernziele
+            // Overview of all learning goals
             GoalsOverviewScreen(
                 learningGoals = learningGoals,
                 topicProgress = topicProgress,
@@ -60,7 +60,7 @@ fun StudyNavigationHost(
         is LearningNavigationState.GoalDetail -> {
             val goal = learningGoals.firstOrNull { it.id == navState.goalId }
             if (goal != null) {
-                // Detail eines Lernziels
+                // Detail view of a learning goal
                 GoalDetailScreen(
                     goal = goal,
                     topicProgress = topicProgress,
@@ -80,7 +80,7 @@ fun StudyNavigationHost(
         is LearningNavigationState.TopicDetail -> {
             val goal = learningGoals.firstOrNull { it.id == navState.goalId }
             if (goal != null) {
-                // Detail eines Topics (Sessions für dieses Topic)
+                // Detail view of a topic (sessions for this topic)
                 val isTopicCompleted = topicProgress[navState.topic] == true
 
                 TopicSessionsScreen(
@@ -105,7 +105,7 @@ fun StudyNavigationHost(
         }
 
         is LearningNavigationState.SessionTimer -> {
-            // Initialisiere Timer wenn Session sich ändert
+            // Initialize timer when session changes
             LaunchedEffect(navState.sessionId) {
                 if (timerUiState.sessionId != navState.sessionId) {
                     timerViewModel.initializeSession(
@@ -118,7 +118,7 @@ fun StudyNavigationHost(
                 }
             }
 
-            // Timer-Screen für die Session (neuer refactored Timer)
+            // Timer screen for the session (refactored timer)
             SessionTimerScreen(
                 uiState = timerUiState,
                 onStartTimer = { timerViewModel.startTimer() },
@@ -127,19 +127,19 @@ fun StudyNavigationHost(
                 onStopTimer = { timerViewModel.stopTimer() },
                 onConfirmPartialSave = {
                     timerViewModel.confirmPartialSave {
-                        // Nach DB-Operation: Navigation zum Dashboard
+                        // After DB operation: Navigate to dashboard
                         onTimerStopped()
                     }
                 },
                 onDismissPartialSave = {
                     timerViewModel.dismissPartialSave {
-                        // Nach Reset: Navigation zum Dashboard
+                        // After reset: Navigate to dashboard
                         onTimerStopped()
                     }
                 },
                 onCompleteSession = {
                     timerViewModel.completeSession {
-                        // Nach DB-Operation: Navigation zum Focus-Bereich
+                        // After DB operation: Navigate to focus area
                         onTimerCompleted(
                             navState.sessionId,
                             navState.goalId,
@@ -152,7 +152,7 @@ fun StudyNavigationHost(
                 onUpdateNotes = { timerViewModel.updateNotes(it) },
                 onUpdateMarkTopicCompleted = { timerViewModel.updateMarkTopicCompleted(it) },
                 onAbort = {
-                    // Stop/Cancel ohne Speichern → Dashboard
+                    // Stop -> without saving --> Home area
                     timerViewModel.cancelTimer()
                     onTimerStopped()
                 },

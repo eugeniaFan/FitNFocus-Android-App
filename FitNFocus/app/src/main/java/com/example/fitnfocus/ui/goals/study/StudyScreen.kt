@@ -168,11 +168,8 @@ fun StudyScreen(
                         },
                         onTimerCompleted = { sessionId, goalId, topic, markTopicCompleted, notes ->
                             viewModel.onTimerCompleted(
-                                sessionId,
                                 goalId,
-                                topic,
-                                markTopicCompleted,
-                                notes
+                                topic
                             )
                             onSessionCompleted()
                         },
@@ -182,6 +179,7 @@ fun StudyScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
+
                 else -> {
                     ComingSoonContent(
                         focusArea = selectedFocusArea,

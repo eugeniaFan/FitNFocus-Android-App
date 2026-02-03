@@ -25,7 +25,7 @@ import com.example.fitnfocus.domain.MotivationType
 import com.example.fitnfocus.domain.UserRole
 
 /**
- * Profil-Header mit Avatar und Grundinfos.
+ * Profile header with avatar and basic info.
  */
 @Composable
 internal fun ProfileHeader(
@@ -54,14 +54,14 @@ internal fun ProfileHeader(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Rolle
+        // Role
         Text(
             text = role.displayName,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
 
-        // Motivation Typ
+        // Motivation Type
         Surface(
             color = MaterialTheme.colorScheme.secondaryContainer,
             shape = MaterialTheme.shapes.small,

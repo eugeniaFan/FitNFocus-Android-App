@@ -26,7 +26,9 @@ abstract class AppDatabase : RoomDatabase() {
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
-                    context.applicationContext, AppDatabase::class.java, "fitnfocus_database"
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "fitnfocus_database"
                 )
                     // Development mode: drops database on schema changes
                     .fallbackToDestructiveMigration(dropAllTables = true)
@@ -37,6 +39,4 @@ abstract class AppDatabase : RoomDatabase() {
 
         }
     }
-
-
 }

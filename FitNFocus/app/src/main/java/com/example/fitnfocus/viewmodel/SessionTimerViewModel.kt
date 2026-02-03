@@ -1,5 +1,6 @@
 package com.example.fitnfocus.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fitnfocus.data.repository.LearningGoalRepository
@@ -22,11 +23,6 @@ import kotlinx.coroutines.launch
  * - Timer lifecycle (start, pause, stop, tick loop)
  * - Dialog state and notes editing
  * - Persisting session status, time, and notes
- *
- * Out of scope:
- * - Focus overview
- * - Navigation state
- * - Picking the next session
  */
 class SessionTimerViewModel(
     private val sessionRepository: SessionRepository,
@@ -197,15 +193,27 @@ class SessionTimerViewModel(
                 }
 
                 if (state.markTopicAsCompleted && state.goalId != null && state.goalId > 0) {
-                    // Use case keeps topic progress and sessions consistent.
-                    setTopicCompletionUseCase(state.goalId, state.sessionTopic, true)
-                }
+                    try {
+                        setTopicCompletionUseCase(state.goalId, state.sessionTopic, true)
+                    } catch (e: Exception) {
 
+                        Log.e(
+                            "SessionTimerViewModel",
+                            "Failed to mark topic completed",
+                            e
+                        )
+                        _uiState.update {
+                            it.copy(errorMessage = "Thema konnte nicht als erledigt markiert werden. Die Session konnte beendet werden.")
+                        }
+                    }
+                }
+                // Success: reset UI state and call callback
                 _uiState.update { SessionTimerUiState() }
                 onComplete()
             } catch (e: Exception) {
+                Log.e("SessionTimerViewModel", "Error completing session", e)
                 _uiState.update {
-                    it.copy(errorMessage = "Fehler beim Abschließen: ${e.message}")
+                    it.copy(errorMessage = "Fehler beim Abschließen ser Session: ${e.message}")
                 }
             }
         }

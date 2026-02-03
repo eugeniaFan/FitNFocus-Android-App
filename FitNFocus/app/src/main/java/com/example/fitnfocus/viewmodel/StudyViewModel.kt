@@ -16,7 +16,7 @@ import com.example.fitnfocus.ui.goals.study.LearningNavigationState
 import com.example.fitnfocus.ui.goals.study.controller.SessionController
 import com.example.fitnfocus.ui.goals.study.controller.StudyNavigationController
 import com.example.fitnfocus.ui.goals.study.StudyUiEvent
-import com.example.fitnfocus.ui.goals.study.overview.components.TopicStatusInteractor
+import com.example.fitnfocus.ui.goals.study.controller.TopicStatusInteractor
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,14 +42,18 @@ class StudyViewModel(
     val uiEvents = _uiEvents.asSharedFlow()
 
     val learningGoals = learningGoalRepository.getActiveGoals()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            emptyList()
+        )
 
     private val topicStatusInteractor = TopicStatusInteractor(
         sessionRepository = sessionRepository,
         topicProgressRepository = topicProgressRepository,
         scope = viewModelScope
     )
-    private lateinit var navigationController: StudyNavigationController
+    private var navigationController: StudyNavigationController
 
     private val sessionController: SessionController by lazy {
         SessionController(
@@ -58,7 +62,6 @@ class StudyViewModel(
             topicStatusInteractor = topicStatusInteractor,
             scope = viewModelScope,
             uiEvents = _uiEvents,
-            getNavState = { navigationController.navState.value },
             setNavState = { navigationController.setNavState(it) }
         )
     }
@@ -103,7 +106,6 @@ class StudyViewModel(
 
     val sessionDialogState = sessionController.dialogState
     val isLoading = sessionController.isLoading
-    val todaySessions = sessionController.todaySessions
     val selectedSession = sessionController.selectedSession
     val topicSessions = sessionController.topicSessions
 
@@ -113,9 +115,14 @@ class StudyViewModel(
         navigationController.navigateToTopicDetail(goal, topic)
 
     fun navigateBackToOverview() =
-        navigationController.navigateBackToOverview { topicStatusInteractor.loadForAllGoals(learningGoals.value) }
+        navigationController.navigateBackToOverview {
+            topicStatusInteractor.loadForAllGoals(
+                learningGoals.value
+            )
+        }
 
-    fun navigateToGoalDetailById(goalId: Int) = navigationController.navigateToGoalDetailById(goalId)
+    fun navigateToGoalDetailById(goalId: Int) =
+        navigationController.navigateToGoalDetailById(goalId)
 
     fun setShowAddDialog(value: Boolean) = sessionController.setShowAddDialog(value)
     fun startSessionForTopic(goalId: Int, topic: String, moduleName: String) =
@@ -172,12 +179,19 @@ class StudyViewModel(
                     )
                 }
             } catch (e: Exception) {
-                _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Fehler beim Aktualisieren des Thema-Status."))
+                _uiEvents.tryEmit(
+                    StudyUiEvent.ShowMessage(
+                        e.message ?: "Fehler beim Aktualisieren des Thema-Status."
+                    )
+                )
             }
         }
     }
 
-    fun onTimerCompleted(sessionId: Int, goalId: Int, topic: String, markTopicCompleted: Boolean, notes: String) {
+    fun onTimerCompleted(
+        goalId: Int,
+        topic: String
+    ) {
         sessionController.onTimerCompletedReturnToTopic(goalId, topic)
         topicStatusInteractor.loadForAllGoals(learningGoals.value)
     }
@@ -203,7 +217,7 @@ class StudyViewModel(
                 _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Lernziel gelöscht."))
                 navigationController.setNavState(LearningNavigationState.Overview)
             } catch (e: Exception) {
-                _uiEvents.tryEmit(StudyUiEvent.ShowMessage("Löschen fehlgeschlagen."))
+                _uiEvents.tryEmit(StudyUiEvent.ShowMessage(e.message ?: "Löschen fehlgeschlagen."))
             } finally {
                 _goalPendingDelete.value = null
             }

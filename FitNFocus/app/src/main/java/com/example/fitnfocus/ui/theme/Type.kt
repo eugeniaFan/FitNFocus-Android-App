@@ -7,42 +7,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 val FitNFocusTypography = Typography(
-    // Große Überschriften (z.B. Onboarding Titel)
+    // Large headlines (e.g. Onboarding title)
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
         fontSize = 30.sp,
         lineHeight = 36.sp
     ),
-    // Screen-Header (z.B. "Lernen", "Heute")
+    // Screen headers (e.g. "Learn", "Today")
     headlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.SemiBold,
         fontSize = 22.sp,
         lineHeight = 28.sp
     ),
-    // Section Titles (z.B. Card Titel)
+    // Section titles (e.g. Card title)
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 22.sp
     ),
-    // Info-Text / kurze Hinweise
+    // Info text / short hints
     bodyMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp
     ),
-    // Beschreibungen, kleinere Labels
+    // Descriptions, smaller labels
     bodySmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp
     ),
-    // Button Text
+    // Button text
     labelLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,

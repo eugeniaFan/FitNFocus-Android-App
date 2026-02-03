@@ -10,4 +10,3 @@ data class PersonalityProfile(
     val structurePreference: Int = 50,
     val motivationType: MotivationType = MotivationType.STRUCTURED_PROGRESS
 )
-

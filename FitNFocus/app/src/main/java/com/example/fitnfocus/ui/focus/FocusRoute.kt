@@ -6,10 +6,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fitnfocus.di.AppViewModelProvider
 import com.example.fitnfocus.viewmodel.FocusViewModel
 
-/**
- * Route für den FocusScreen (NUR Münzen-Ansicht).
- * Timer-Logik wurde in SessionTimerRoute ausgelagert.
- */
+
 @Composable
 fun FocusRoute(
     onNavigateToCollection: () -> Unit,

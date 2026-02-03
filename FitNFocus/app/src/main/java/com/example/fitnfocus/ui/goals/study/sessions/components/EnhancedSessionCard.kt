@@ -44,12 +44,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.SessionStatus
 import com.example.fitnfocus.domain.StudySession
-import com.example.fitnfocus.ui.common.toPresentation
 import com.example.fitnfocus.ui.theme.OrangeAccent
 import com.example.fitnfocus.ui.theme.PurpleContainer
 
 /**
- * Erweiterte Session-Card mit Status, Notes und Topic-Completion.
+ * Enhanced session card with status, notes, and topic completion.
  */
 @Composable
 fun EnhancedSessionCard(
@@ -95,7 +94,7 @@ fun EnhancedSessionCard(
                         modifier = Modifier
                             .padding(top = 4.dp)
                     ) {
-                        // Status-Badge (zentralisiert)
+                        // Status badge (centralized)
                         val statusPresentation = session.status.toPresentation()
 
                         Surface(
@@ -107,8 +106,10 @@ fun EnhancedSessionCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = statusPresentation.color,
                                 modifier = Modifier
-                                    .padding(horizontal = 8.dp,
-                                        vertical = 4.dp)
+                                    .padding(
+                                        horizontal = 8.dp,
+                                        vertical = 4.dp
+                                    )
                             )
                         }
                     }
@@ -124,7 +125,7 @@ fun EnhancedSessionCard(
                             Icons.Default.MoreVert,
                             contentDescription = "Status ändern",
                             tint = if (isCompleted) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                   else MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -216,7 +217,7 @@ fun EnhancedSessionCard(
                     value = notesText,
                     onValueChange = { notesText = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text( text = "Was wurde erledigt? Todos...") },
+                    placeholder = { Text(text = "Was wurde erledigt? Todos...") },
                     minLines = 3
                 )
             },

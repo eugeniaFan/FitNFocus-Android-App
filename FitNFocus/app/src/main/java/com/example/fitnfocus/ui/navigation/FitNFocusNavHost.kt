@@ -9,11 +9,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.fitnfocus.ui.focus.CollectionScreen
 import com.example.fitnfocus.ui.focus.FocusRoute
+import com.example.fitnfocus.ui.goals.study.StudyRoute
 import com.example.fitnfocus.ui.goals.study.timer.SessionTimerRoute
 import com.example.fitnfocus.ui.home.HomeScreen
 import com.example.fitnfocus.ui.onboarding.OnboardingRoute
 import com.example.fitnfocus.ui.profile.ProfileScreen
-import com.example.fitnfocus.ui.goals.study.StudyRoute
 import com.example.fitnfocus.viewmodel.StudyViewModel
 
 
@@ -98,7 +98,6 @@ fun FitNFocusNavHost(
 
         composable(NavRoutes.Goals.route) {
             StudyRoute(
-                onBack = { navController.popBackStack() },
                 viewModel = studyViewModel,
                 onSessionStopped = {
                     navController.navigate(NavRoutes.Home.route) {

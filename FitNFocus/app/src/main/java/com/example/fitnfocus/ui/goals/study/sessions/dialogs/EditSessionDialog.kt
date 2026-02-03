@@ -25,6 +25,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.StudySession
 
+/**
+ * Dialog for editing a new Focus Session.
+ * Topic is displayed but not editable.
+ * Only the duration can be entered.
+ */
 @Composable
 fun EditSessionDialog(
     session: StudySession,
@@ -40,7 +45,7 @@ fun EditSessionDialog(
         title = { Text("Session bearbeiten") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                // Thema ist nicht bearbeitbar (nur anzeigen)
+                // Topic display (not editable)
                 OutlinedTextField(
                     value = session.topic,
                     onValueChange = { },
@@ -49,6 +54,7 @@ fun EditSessionDialog(
                     enabled = false,
                     readOnly = true
                 )
+                // Duration input
                 OutlinedTextField(
                     value = editedDuration,
                     onValueChange = { editedDuration = it },

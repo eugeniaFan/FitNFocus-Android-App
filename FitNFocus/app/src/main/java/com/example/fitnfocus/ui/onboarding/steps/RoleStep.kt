@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.fitnfocus.domain.UserRole
 
 /**
- * Step 1: Rollenauswahl
+ * Step 1: choose a role
  */
 @Composable
 fun RoleStep(

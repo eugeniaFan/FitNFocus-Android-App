@@ -17,25 +17,24 @@ class SessionRepository(
 ) {
 
     suspend fun getSessionById(id: Int): StudySession? {
-        return sessionDao.getSessionById(id)?.let { SessionMapper.entityToDomain(it) }
+        return sessionDao.getSessionById(id)
+            ?.let { SessionMapper.entityToDomain(it) }
     }
 
     suspend fun getSessionsByDate(date: LocalDate): List<StudySession> {
-        val entities = sessionDao.getSessionsByEpochDay(date.toEpochDay())
-        return entities.map { entity -> SessionMapper.entityToDomain(entity) }
+        return sessionDao
+            .getSessionsByEpochDay(date.toEpochDay())
+            .map { entity -> SessionMapper.entityToDomain(entity) }
     }
 
     fun getAllSessions(): Flow<List<StudySession>> {
-        return sessionDao.getAllSessions().map { entities ->
-            entities.map { entity -> SessionMapper.entityToDomain(entity) }
-        }
+        return sessionDao.getAllSessions()
+            .map { entities -> entities.map { entity -> SessionMapper.entityToDomain(entity) } }
     }
 
     fun getSessionsForTopicFlow(topic: String, goalId: Int): Flow<List<StudySession>> {
         return sessionDao.getSessionsForTopicFlow(topic, goalId)
-            .map { list ->
-                list.map { list -> SessionMapper.entityToDomain(list) }
-            }
+            .map { entities -> entities.map { entity -> SessionMapper.entityToDomain(entity) } }
     }
 
     suspend fun hasSessionsForTopic(topic: String, goalId: Int): Boolean {

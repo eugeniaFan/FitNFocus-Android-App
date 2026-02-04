@@ -46,4 +46,3 @@ interface LearningGoalDao {
     @Query("DELETE FROM learning_goal")
     suspend fun deleteAll()
 }
-

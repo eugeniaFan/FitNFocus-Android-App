@@ -76,7 +76,7 @@ fun HomeScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Row {
-                        Text(text = "Hallo Eugenia")
+                        Text(text = "Übersicht")
                     }
                 },
                 actions = {

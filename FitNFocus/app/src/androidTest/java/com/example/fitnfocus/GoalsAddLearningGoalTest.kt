@@ -60,23 +60,20 @@ class GoalsAddLearningGoalTest {
 
         composeTestRule.onNodeWithTag("edit_goal_input_exam_date").performTextClearance()
         composeTestRule.onNodeWithTag("edit_goal_input_exam_date").performTextInput("05.01.2026")
-        composeTestRule.onNodeWithTag("edit_goal_input_topic")
-            .performTextInput("Projekt vorstellen")
+        composeTestRule.onNodeWithTag("edit_goal_input_topic").performTextInput("Projekt vorstellen")
         composeTestRule.onNodeWithTag("edit_goal_add_topic_button").performClick()
 
         composeTestRule.onNodeWithTag("edit_goal_save_button").performScrollTo().performClick()
         composeTestRule.onNodeWithText("Projekt vorstellen").assertIsDisplayed()
 
         // Part 3: create session
-        composeTestRule.onNodeWithTag("topic_item_Projekt_vorstellen").performScrollTo()
-            .performClick()
+        composeTestRule.onNodeWithTag("topic_item_Projekt_vorstellen").performScrollTo().performClick()
         composeTestRule.onNodeWithTag("screen_topic_sessions").assertIsDisplayed()
 
         composeTestRule.onNodeWithTag("add_session_button").performClick()
 
         composeTestRule.onNodeWithTag("add_session_dialog").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("add_session_dialog_topic")
-            .assertTextContains("Projekt vorstellen")
+        composeTestRule.onNodeWithTag("add_session_dialog_topic").assertTextContains("Projekt vorstellen")
 
         composeTestRule.onNodeWithTag("add_session_duration").performTextInput("a")
         composeTestRule.onNodeWithTag("add_session_save").assertIsNotEnabled()
@@ -101,8 +98,10 @@ class GoalsAddLearningGoalTest {
         composeTestRule.onNodeWithTag("screen_session_timer").assertIsDisplayed()
 
         composeTestRule.onNodeWithTag("timer_play_button").performClick()
+
         composeTestRule.waitForIdle()
         Thread.sleep(2000)
+
         composeTestRule.onNodeWithTag("screen_session_timer").assertIsDisplayed()
 
         composeTestRule.waitUntil(timeoutMillis = 70_000) {
